@@ -1,5 +1,3 @@
-## [Level Up Coding](/?source=post_page---publication_nav-5517fd7b58a6-92010e609dfa------------------------------------------)
-
 Follow publication
 
 1. [The Setup, and a GPU That Reports Itself Present](#The-Setup-and-a-GPU-That-Reports-Itself-Present)
@@ -56,21 +54,6 @@ Level Up Coding
 
 Coding tutorials and news. The developer homepage [gitconnected.com](http://gitconnected.com/) &amp;&amp; [skilled.dev](http://skilled.dev/) &amp;&amp; [levelup.dev](http://levelup.dev/)
 
-Follow publication
-
-Top highlight
-
-Member-only story
-
-[AI](https://medium.com/tag/ai?source=post_page---header_tags--92010e609dfa------------------------------------------)
-
-[Artificial Intelligence](https://medium.com/tag/artificial-intelligence?source=post_page---header_tags--92010e609dfa------------------------------------------)
-
-[Data Science](https://medium.com/tag/data-science?source=post_page---header_tags--92010e609dfa------------------------------------------)
-
-[Python](https://medium.com/tag/python?source=post_page---header_tags--92010e609dfa------------------------------------------)
-
-[AI Agent](https://medium.com/tag/ai-agent?source=post_page---header_tags--92010e609dfa------------------------------------------)
 
 # Structuring 40 Million Documents into an Agentic Knowledge Graph
 
@@ -82,19 +65,6 @@ Fareed Khan
 
 [Fareed Khan](https://medium.com/@fareedkhandev?source=post_page---byline--92010e609dfa------------------------------------------) Follow
 
-59 min read Aug 26, 2026
-
-1.8K
-
-25
-
-28
-
-Listen
-
-Share
-
-More
 
 Read this story for free: [link](https://medium.com/@fareedkhandev/92010e609dfa?source=friends_link&sk=75a6aa549ffec29041037f0a1d9afe87)
 
@@ -143,7 +113,7 @@ agentic-knowledge-graph/
 
 One thing to state now rather than defend later. **The 929,824,202 in the title is what the parse produced, and the graph the agent walks is smaller.** Chemicals, publication types and corrections are parsed and stored, but traversal only ever uses citations and MeSH annotations, which is 740,464,909 edges. Both numbers are real and they measure different things.
 
-Press enter or click to view image in full size
+
 
 What the parse produced, against what the agent actually walks (Created by Fareed Khan )
 
@@ -200,7 +170,7 @@ The download is where I got something wrong. My first attempt used 12 parallel j
 
 All 1,334 files landed at 50.5 GiB, none missing and none corrupt. Everything the graph is built from is visible in one record.
 
-```
+```python
 from lxml import etree
 
 with gzip.open(files[0], "rb") as fh:
@@ -248,7 +218,7 @@ This step decides whether the idea is affordable. Microsoft's published GraphRAG
 
 So we extract nothing. Six tables, five of them edges, every row a field NLM already published. The parser is one function per file, and the lines that matter sit at the bottom of the loop.
 
-```
+```python
 def parse_file(path: str) -> dict:
     rows = {t: [] for t in TABLES}
     with gzip.open(path, "rb") as fh:
@@ -278,7 +248,7 @@ def parse_file(path: str) -> dict:
 
 The 1,334 baseline files are independent, so the work is one operating-system process per file rather than threads.
 
-```
+```python
 with Pool(args.procs) as pool:
     for r in pool.imap_unordered(parse_file, files):
         for k in tot:
@@ -304,7 +274,7 @@ with Pool(args.procs) as pool:
 
 **Thirty nine million, nine hundred and ninety four thousand, nine hundred and eighty eight articles and 929,824,202 edges, in 10.8 minutes at 61,449 records per second, for zero model calls.** The five edge families sum to the headline figure, and the article table is the node list, not a sixth family.
 
-Press enter or click to view image in full size
+
 
 The five edge families, and the node table that is not one of them (Created by Fareed Khan )
 
@@ -312,7 +282,7 @@ The five edge families, and the node table that is not one of them (Created by F
 
 Against 33,000 dollars for one much smaller dataset, that gap is not an optimisation, it is a different architecture. Extraction buys relations MeSH lacks, at a price that makes forty million documents impossible.
 
-Press enter or click to view image in full size
+
 
 One record, five edge families, and not one of them inferred (Created by Fareed Khan )
 
@@ -322,7 +292,7 @@ One record, five edge families, and not one of them inferred (Created by Fareed 
 
 First I wanted to know whether multi-hop traversal even exists here. A citation edge is usable only if **both** endpoints sit inside the corpus we index, and low retention would mean a hairball of stubs that still scores well on every other metric.
 
-Press enter or click to view image in full size
+
 
 Induced-subgraph retention, the number that decided the corpus size (Created by Fareed Khan )
 
@@ -339,7 +309,7 @@ Induced-subgraph retention, the number that decided the corpus size (Created by 
 
 Now the counterfactual, because the original plan was a recent ten million document slice.
 
-```
+```python
 for n_slice in (5_000_000, 10_000_000, 20_000_000):
     con.execute(f"""CREATE OR REPLACE TEMP VIEW slice AS
                     SELECT pmid FROM articles ORDER BY year DESC NULLS LAST
@@ -382,13 +352,13 @@ The era breakdown shows why no slice works.
 
 Ninety eight percent MeSH coverage in the 1950s sits beside 0.4% abstracts, and recent decades are the mirror image because indexing lags publication. The two layers never co-occur, so **only the full corpus has both at once** and going bigger was necessity.
 
-Press enter or click to view image in full size
+
 
 Seventy five years of corpus, and the two layers never overlap (Created by Fareed Khan )
 
 ![Image](structuring-docs-knowledge-graph_artifacts/image_000007_ecba9ff6a73172e59d85fc25318545d8ae0ea6af6d047ad9e62f4acddc1b4894.png)
 
-Press enter or click to view image in full size
+
 
 The slice decision, drawn on the GPU box before the architecture was chosen (Created by Fareed Khan )
 
@@ -412,13 +382,13 @@ MeSH is not a vocabulary I picked. It is a curated hierarchical thesaurus every 
 
 Tree numbers are dotted paths, so ancestry is a string-prefix test.
 
-Press enter or click to view image in full size
+
 
 Ancestry needs no reasoner, because the identifier already encodes the path (Created by Fareed Khan )
 
 ![Image](structuring-docs-knowledge-graph_artifacts/image_000009_9ce649f8cf10a9be7358b5123e37b9a9b936c0f4b1b8f59a71cdf9dd1d56d8db.png)
 
-```
+```python
 probe = next(u for u, n in name_of.items() if n == "Myocardial Infarction")
 print(f"  '{name_of[probe]}' ({probe})  tree numbers: {ui2tn[probe]}")
 print("  ancestry by STRING PREFIX - no graph walk, no Datalog:")
@@ -441,7 +411,7 @@ for i in range(1, len(parts) + 1):
 
 **Four ancestors recovered by slicing a string on dots.** A reasoner would be slower and buy nothing, because the identifier already encodes the path.
 
-Press enter or click to view image in full size
+
 
 Myocardial Infarction, four levels up, by prefix (Created by Fareed Khan )
 
@@ -464,7 +434,7 @@ Every supplementary record carries a `HeadingMappedTo` list pointing at main des
 
 **324,046 supplementary records contributed 729,017 raw surface terms, with no new edges and no new model.** Grounding pembrolizumab now resolves through the alias, and traversal downstream is unchanged.
 
-Press enter or click to view image in full size
+
 
 A supplementary record is an alias, never a new node (Created by Fareed Khan )
 
@@ -478,7 +448,7 @@ I audited the graph databases before rejecting them, and the finding was simple:
 
 Compressed sparse row solves both, because edges sorted by source make the neighbours of node `i` one contiguous slice.
 
-Press enter or click to view image in full size
+
 
 The whole traversal primitive, in one array slice (Created by Fareed Khan )
 
@@ -486,7 +456,7 @@ The whole traversal primitive, in one array slice (Created by Fareed Khan )
 
 The build is a counting pass and a stable sort.
 
-```
+```python
 def build_csr(src, dst, n_nodes):
     counts = np.bincount(src, minlength=n_nodes).astype(np.int64)
     indptr = np.zeros(n_nodes + 1, dtype=np.int64)
@@ -497,7 +467,7 @@ def build_csr(src, dst, n_nodes):
 
 Both directions use that routine. The reverse index reaches **2.3 times more articles than the forward one** , because a paper cites a few dozen works and can be cited by thousands, and without it most of the graph is unreachable.
 
-Press enter or click to view image in full size
+
 
 Citation degree over 39,994,988 articles, on log axes (Created by Fareed Khan )
 
@@ -505,7 +475,7 @@ Citation degree over 39,994,988 articles, on log axes (Created by Fareed Khan )
 
 Every array opens memory-mapped, so construction is milliseconds and the page cache decides what stays resident.
 
-```
+```python
 class KGStore:
     def __init__(self, path=GRAPH_DIR):
         t0 = time.time()
@@ -542,7 +512,7 @@ class KGStore:
 
 Only **28,336,648 of 39,994,988 nodes are quotable** , meaning they have an abstract, so the system can traverse through a node it may not cite.
 
-Press enter or click to view image in full size
+
 
 One index, one range, one slice of neighbours (Created by Fareed Khan )
 
@@ -550,7 +520,7 @@ One index, one range, one slice of neighbours (Created by Fareed Khan )
 
 Now the latency claim, measured.
 
-```
+```python
 probe = np.random.default_rng(0).integers(0, S.N, 20000)
 _t = time.time()
 touched = sum(len(S.cites(int(i))) + len(S.cited_by(int(i))) for i in probe)
@@ -574,7 +544,7 @@ My first MeSH build pulled `descriptor_ui` , a string, for all 396,187,851 rows 
 
 The fix keeps the mapping in the database.
 
-```
+```python
 con.execute(f"""
     CREATE OR REPLACE TABLE dlut AS
     SELECT ui, CAST(row_number() OVER (ORDER BY ui) - 1 AS INTEGER) AS didx
@@ -600,7 +570,7 @@ I built it in a second pass with a different deduplication rule and no `ORDER BY
 
 Nothing crashed and nothing raised. Evidence would have been labelled with the wrong article's flags, in a system whose entire claim is traceability.
 
-Press enter or click to view image in full size
+
 
 Two passes, two orderings, and no error anywhere (Created by Fareed Khan )
 
@@ -608,7 +578,7 @@ Two passes, two orderings, and no error anywhere (Created by Fareed Khan )
 
 The rebuild derives both arrays from one sorted frame and asserts it.
 
-```
+```python
 cnt = np.bincount(dst, minlength=D).astype(np.int64)
 d_indptr = np.zeros(D + 1, dtype=np.int64)
 np.cumsum(cnt, out=d_indptr[1:])
@@ -617,17 +587,20 @@ d_indices, d_major = src[o].astype(np.int32), maj[o]
 assert len(d_indices) == len(d_major) == d_indptr[-1], "mesh2art misaligned"
 ```
 
-Press enter or click to view image in full size
+
 
 The invariant that was missing the first time (Created by Fareed Khan )
 
 ![Image](structuring-docs-knowledge-graph_artifacts/image_000016_46e2d083b8f9fcc80fc277f730d21a6375ea46638bf3cc01debf1e99300187bc.png)
 
-The `lexsort` does double duty. It aligns the flags, and because the secondary key is the article index, every descriptor's article list comes out ascending, which lets intersection downstream use binary search.
+The `lexsort` does double duty. It aligns the flags, and because the secondary key is the
+article index, every descriptor's article list comes out ascending, which lets
+intersection downstream use binary search.
 
-An assert only proves the arrays agree with each other, so the rebuild also recounts against the database.
+An assert only proves the arrays agree with each other, so the rebuild also recounts
+against the database.
 
-```
+```python
 pi = int(np.searchsorted(uis, "D001241"))              # Aspirin
 csr_n = int(d_indptr[pi + 1] - d_indptr[pi])
 csr_maj = int(d_major[d_indptr[pi]:d_indptr[pi + 1]].sum())
@@ -644,27 +617,40 @@ assert csr_n == db_n and csr_maj == db_maj, "CSR disagrees with the database"
                      DB  50,506 articles   match=True
 ```
 
-**Fifty thousand five hundred and six articles on both sides, and 27,002 of them major topic.** That is the check I now want on every derived structure: an internal invariant plus an independent recount from the source.
+**Fifty thousand five hundred and six articles on both sides, and 27,002 of them major
+topic.** That is the check I now want on every derived structure: an internal invariant
+plus an independent recount from the source.
 
-One number is worth flagging. The shipped graph reports 342,733,118 MeSH edges while the parse produced 396,187,851 raw rows, because one article and descriptor pair can repeat with different qualifiers, and the graph collapses them into one edge, major if any row was major. The bug was never which total is correct, it was that two passes disagreed and nothing checked.
+One number is worth flagging. The shipped graph reports 342,733,118 MeSH edges while the
+parse produced 396,187,851 raw rows, because one article and descriptor pair can repeat
+with different qualifiers, and the graph collapses them into one edge, major if any row
+was major. The bug was never which total is correct, it was that two passes disagreed and
+nothing checked.
 
 ## Grounding a Question Without Letting a Model Near It
 
-No model is allowed in the grounder, because this is where a hallucination would enter. Questions map onto entry points by longest-match lookup against normalised MeSH terms, so **the model never emits an identifier and cannot invent one** .
+No model is allowed in the grounder, because this is where a hallucination would enter.
+Questions map onto entry points by longest-match lookup against normalised MeSH terms, so
+**the model never emits an identifier and cannot invent one** .
 
-Four versions and a new metric got it there. Version one covered **51.0%** of real questions, so I categorised three hundred failures.
+Four versions and a new metric got it there. Version one covered **51.0%** of real
+questions, so I categorised three hundred failures.
 
-- **33.0% grounded only one usable concept** , mostly British spelling and inverted preferred terms.
+**33.0% grounded only one usable concept** , mostly British spelling and inverted
+preferred terms.
 
-**12.7% had every match dropped** by an over-tight category filter that discarded whole vocabulary branches.
+**12.7% had every match dropped** by an over-tight category filter that discarded whole
+vocabulary branches.
 
-**3.3% matched nothing** , the classic case being circumcision against MeSH's inverted form.
+**3.3% matched nothing** , the classic case being circumcision against MeSH's inverted
+form.
 
 ### Version Three: Orthography, De-inversion, and Roles
 
-Three fixes, each aimed at a measured bucket. MeSH is US English and much medical writing is not.
+Three fixes, each aimed at a measured bucket. MeSH is US English and much medical writing
+is not.
 
-```
+```python
 ORTHO = [(r"oesophag", "esophag"), (r"paediatr", "pediatr"), (r"anaesthe", "anesthe"),
          (r"coeliac", "celiac"), (r"tumour", "tumor")]    # 27 rules in all
 
@@ -675,21 +661,27 @@ def normalise(s):
     return " ".join(s.split())
 ```
 
-The second fix is de-inversion, because MeSH holds Circumcision, Male rather than male circumcision and natural phrasing misses.
+The second fix is de-inversion, because MeSH holds Circumcision, Male rather than male
+circumcision and natural phrasing misses.
 
-The third fix recovered most of the coverage, because **specificity is only required of a bridge** . Version two discarded every descriptor lacking it, yet Diagnosis can still narrow Keratins.
+The third fix recovered most of the coverage, because **specificity is only required of a
+bridge** . Version two discarded every descriptor lacking it, yet Diagnosis can still
+narrow Keratins.
 
 That took coverage from 51.0% to **74.0%** .
 
 ### Version Four, and the Metric That Caught It
 
-Version four added supplementary aliases and head nouns, indexed only when one descriptor claims them, so circumcision is kept and diseases rejected.
+Version four added supplementary aliases and head nouns, indexed only when one descriptor
+claims them, so circumcision is kept and diseases rejected.
 
-Coverage went to **81.0%** and I nearly shipped it, but coverage only asks whether we grounded something, which matching every word maximises.
+Coverage went to **81.0%** and I nearly shipped it, but coverage only asks whether we
+grounded something, which matching every word maximises.
 
-What I want is precision against the gold article's own MeSH headings, already in my graph. **That is ground truth I did not author.**
+What I want is precision against the gold article's own MeSH headings, already in my
+graph. **That is ground truth I did not author.**
 
-```
+```python
 def score(g, label):
     tp = fp = fn = 0
     for q, gold, gold_b in items:
@@ -716,7 +708,9 @@ def score(g, label):
     14x  'influence'                -> Peer Influence
 ```
 
-**Head-noun matching bought seven coverage points and cost 0.075 of precision, adding 103 false positives.** The word decrease became Population Dynamics, a grammatical accident rather than a concept, so the feature was rejected.
+**Head-noun matching bought seven coverage points and cost 0.075 of precision, adding 103
+false positives.** The word decrease became Population Dynamics, a grammatical accident
+rather than a concept, so the feature was rejected.
 
 Coverage and precision point in opposite directions (Created by Fareed Khan )
 
@@ -724,11 +718,13 @@ Coverage and precision point in opposite directions (Created by Fareed Khan )
 
 ### Version Five, and a Guard Built From Evidence
 
-The final version adds one guard: a single-word match must not be ordinary English, because a multi-word phrase like myocardial infarction is already technical.
+The final version adds one guard: a single-word match must not be ordinary English,
+because a multi-word phrase like myocardial infarction is already technical.
 
-**Every word in the blocked set was observed producing a false positive in the precision run.** The grounder below is built once and used everywhere downstream.
+**Every word in the blocked set was observed producing a false positive in the precision
+run.** The grounder below is built once and used everywhere downstream.
 
-```
+```python
 class Grounder:
     def __init__(self, terms, names):
         self.name, self.term2ui = names, {}
@@ -760,11 +756,12 @@ class Grounder:
   longest entry term    : 64 words
 ```
 
-**914,356 surface forms, of which 664,659 came from supplementary concepts and 97,093 from de-inverting MeSH's own preferred terms.** The longest entry term runs sixty four words.
+**914,356 surface forms, of which 664,659 came from supplementary concepts and 97,093 from
+de-inverting MeSH's own preferred terms.** The longest entry term runs sixty four words.
 
 Let us check the orthography fix.
 
-```
+```python
 for probe in ["barrett's oesophagus", "tumour necrosis factor", "paediatric anaesthesia",
               "coeliac disease", "male circumcision"]:
     ui = GR.term2ui.get(normalise(probe))
@@ -780,9 +777,10 @@ for probe in ["barrett's oesophagus", "tumour necrosis factor", "paediatric anae
   male circumcision          -> Circumcision, Male
 ```
 
-**All five resolve, and each was a miss before.** The last is de-inversion, and the first four are twenty seven substitution rules earning their keep.
+**All five resolve, and each was a miss before.** The last is de-inversion, and the first
+four are twenty seven substitution rules earning their keep.
 
-Press enter or click to view image in full size
+
 
 Question, spans, descriptors, and no model in the path (Created by Fareed Khan )
 
@@ -792,13 +790,14 @@ Question, spans, descriptors, and no model in the path (Created by Fareed Khan )
 
 A descriptor gets a role, and the rule is short.
 
-Press enter or click to view image in full size
 
-The bridge predicate, which is the only place specificity is required (Created by Fareed Khan )
+
+The bridge predicate, which is the only place specificity is required (Created by Fareed
+Khan )
 
 ![Image](structuring-docs-knowledge-graph_artifacts/image_000019_121a9628b3b3a1aa1bf6d58d7959665927e38ffae0814317ec2afbd44b4d036c.png)
 
-```
+```python
 BRIDGE, FILTER, IGNORE = "BRIDGE", "FILTER", "IGNORE"
 
 def role_of(store, ui):
@@ -813,7 +812,7 @@ def role_of(store, ui):
     return d, FILTER
 ```
 
-```
+```python
 demo_q = "Is cytokeratin immunoreactivity useful in the diagnosis of Barrett's oesophagus?"
 print(f"  Q: {demo_q}")
 for ui, nm, surface in GR.ground(demo_q):
@@ -827,7 +826,8 @@ for ui, nm, surface in GR.ground(demo_q):
       BRIDGE  D007633     Keratins                       <- 'cytokeratin'
 ```
 
-**Two bridge concepts from a question in British English using a synonym for the descriptor name.** Cytokeratin is not the MeSH term, Keratins is.
+**Two bridge concepts from a question in British English using a synonym for the
+descriptor name.** Cytokeratin is not the MeSH term, Keratins is.
 
 The check tags are excluded for a concrete reason.
 
@@ -842,15 +842,18 @@ The check tags are excluded for a concrete reason.
       D008875    cat=M    5,196,713 articles
 ```
 
-**D006801 is Humans, and it annotates 23,222,680 articles.** Traversing it would connect twenty three million papers and call that evidence. The article-count rule excludes it, not the category rule, because Humans shares category B with every organism.
+**D006801 is Humans, and it annotates 23,222,680 articles.** Traversing it would connect
+twenty three million papers and call that evidence. The article-count rule excludes it,
+not the category rule, because Humans shares category B with every organism.
 
-Press enter or click to view image in full size
 
-Descriptor frequency is Zipfian, and the head of it is check tags (Created by Fareed Khan )
+
+Descriptor frequency is Zipfian, and the head of it is check tags (Created by Fareed
+Khan )
 
 ![Image](structuring-docs-knowledge-graph_artifacts/image_000020_a4c58ebbe18ad98a46715fe67712d36278689abae53eb57657bdb3dd0c60e9f8.png)
 
-Press enter or click to view image in full size
+
 
 Three roles, and only one of them can connect two concepts (Created by Fareed Khan )
 
@@ -858,9 +861,11 @@ Three roles, and only one of them can connect two concepts (Created by Fareed Kh
 
 ## What Actually Connects the Question
 
-Seeding from one concept and walking outward returns aspirin papers, not aspirin-and-infarction ones. The evidence is whatever **connects** the concepts a question names, so I enumerated two classes of it, both provenanced.
+Seeding from one concept and walking outward returns aspirin papers, not
+aspirin-and-infarction ones. The evidence is whatever **connects** the concepts a question
+names, so I enumerated two classes of it, both provenanced.
 
-```
+```python
 @dataclass
 class EvidencePath:
     kind: str
@@ -877,17 +882,20 @@ class EvidencePath:
         return f"{self.kind:<6} [{' + '.join(self.concepts)}] {chain} ({self.year})"
 ```
 
-A DIRECT path is one article carrying both descriptors as major topics, zero hops and strongest because NLM asserted both. A BRIDGE path is one hop, an article on concept one citing one on concept two.
+A DIRECT path is one article carrying both descriptors as major topics, zero hops and
+strongest because NLM asserted both. A BRIDGE path is one hop, an article on concept one
+citing one on concept two.
 
-Which pair to connect when a question names three or four concepts is decided by the graph.
+Which pair to connect when a question names three or four concepts is decided by the
+graph.
 
-Press enter or click to view image in full size
+
 
 Pair selection is a set intersection, not a rule (Created by Fareed Khan )
 
 ![Image](structuring-docs-knowledge-graph_artifacts/image_000022_1cb91ed35e6cb0a69a2c6194f345fee23c9c3a84f8cade0923c6723a24a5f1a8.png)
 
-```
+```python
 class ConceptLinker:
     def score_pairs(self, cons, verbose=False):
         """Let the GRAPH choose which concepts belong together."""
@@ -911,7 +919,7 @@ class ConceptLinker:
 
 The bridge enumeration uses the ascending order the rebuild guaranteed, so membership is a binary search.
 
-```
+```python
 def _bridge(self, d1, d2, n1, n2):
     s, out = self.s, []
     A = s.articles_of(d1, major_only=True)[-self.max_seed:]
@@ -925,7 +933,7 @@ def _bridge(self, d1, d2, n1, n2):
     return out[:self.max_paths]
 ```
 
-```
+```python
 q = "Does aspirin reduce the risk of myocardial infarction?"
 print(f"  Q: {q}")
 paths, cons, scored = CL.link(GR.ground(q), verbose=True)
@@ -943,17 +951,20 @@ print(f"  paths: {len(paths)}  (DIRECT={kinds['DIRECT']}, BRIDGE={kinds['BRIDGE'
   paths: 400  (DIRECT=200, BRIDGE=200)
 ```
 
-**Aspirin and Myocardial Infarction, connected by 1,132 articles carrying both as major topics.** The word risk passes the specificity filter but co-annotates with almost nothing, so the graph never picks it.
+**Aspirin and Myocardial Infarction, connected by 1,132 articles carrying both as major
+topics.** The word risk passes the specificity filter but co-annotates with almost
+nothing, so the graph never picks it.
 
-Press enter or click to view image in full size
 
-Two ways to connect two concepts, and both carry their provenance (Created by Fareed Khan )
+
+Two ways to connect two concepts, and both carry their provenance (Created by Fareed
+Khan )
 
 ![Image](structuring-docs-knowledge-graph_artifacts/image_000023_384a77a45e0c46a83f2d58e8206ce5abedab2cfe0c93b8277f613cbb82917a28.png)
 
 Now the evidence, with its justifying path.
 
-```
+```python
 for p in sorted([p for p in paths if p.quotable and not p.retracted],
                 key=lambda p: -p.year)[:5]:
     print(f"  {p.render()}")
@@ -968,19 +979,22 @@ for p in sorted([p for p in paths if p.quotable and not p.retracted],
   DIRECT [Aspirin + Myocardial Infarction] PMID 40119267 (2025)
 ```
 
-Five lines came back, and each is a defensible claim. Article 39308168 is about aspirin, article 41584723 cites it, and that one is about myocardial infarction with a quotable abstract.
+Five lines came back, and each is a defensible claim. Article 39308168 is about aspirin,
+article 41584723 cites it, and that one is about myocardial infarction with a quotable
+abstract.
 
 ## The Refusal Ladder
 
-Six gates, five of them pure graph predicates evaluated **before the generator is ever invoked** , so a refusal is an empty result set, not a model being humble.
+Six gates, five of them pure graph predicates evaluated **before the generator is ever
+invoked** , so a refusal is an empty result set, not a model being humble.
 
-Press enter or click to view image in full size
+
 
 The gates are a conjunction, and every term is a numpy predicate (Created by Fareed Khan )
 
 ![Image](structuring-docs-knowledge-graph_artifacts/image_000024_c0dc62af96380b841dbacef71cd11c5c570de50b1d4024e7f8714a000c24a4f5.png)
 
-```
+```python
 class RefusalLadder:
     def evaluate(self, groundings, concepts, paths):
         if not groundings:
@@ -1006,9 +1020,11 @@ class RefusalLadder:
         return Verdict(True, "grounded", len(paths), len(u))
 ```
 
-Gate four is not hypothetical. The graph spans forty million nodes and only 28.3 million are quotable, so the system can traverse a node it may not cite.
+Gate four is not hypothetical. The graph spans forty million nodes and only 28.3 million
+are quotable, so the system can traverse a node it may not cite.
 
-A helper grounds each question, evaluates the ladder, and prints the verdict. I drove five questions, two designed to fail.
+A helper grounds each question, evaluates the ladder, and prints the verdict. I drove five
+questions, two designed to fail.
 
 ```
 #### OUTPUT ####
@@ -1036,9 +1052,11 @@ A helper grounds each question, evaluates the ladder, and prints the verdict. I 
             -> the generator is never called.
 ```
 
-Two of the five refused. **A question naming nothing in the ontology is refused at gate one, before any generation happens.** Asking a 2020 question as of 2015 finds 362 paths and keeps zero, because the evidence did not exist yet.
+Two of the five refused. **A question naming nothing in the ontology is refused at gate
+one, before any generation happens.** Asking a 2020 question as of 2015 finds 362 paths
+and keeps zero, because the evidence did not exist yet.
 
-Press enter or click to view image in full size
+
 
 Six gates, and only the last one runs after the generator (Created by Fareed Khan )
 
@@ -1046,11 +1064,14 @@ Six gates, and only the last one runs after the generator (Created by Fareed Kha
 
 ## Experiment One: Does Refusal Actually Track the Evidence?
 
-Anything untraceable is refused is a **causal** claim, so deleting the evidence has to stop the answers. Ablation supplies a negative condition I did not label, because the deletion is the ground truth.
+Anything untraceable is refused is a **causal** claim, so deleting the evidence has to
+stop the answers. Ablation supplies a negative condition I did not label, because the
+deletion is the ground truth.
 
-I made it a dose-response curve, because deleting one paper from forty million almost never removes the answer.
+I made it a dose-response curve, because deleting one paper from forty million almost
+never removes the answer.
 
-```
+```python
 class AblatableLinker(ConceptLinker):
     def __init__(self, store, excluded: set, **kw):
         super().__init__(store, **kw)
@@ -1066,9 +1087,11 @@ class AblatableLinker(ConceptLinker):
                 if self.s.idx(p.terminal_pmid) not in self.excluded]
 ```
 
-The tiers are cumulative. T1 excludes the gold document, T2 adds every directly co-annotated article, T3 adds every bridge terminal.
+The tiers are cumulative. T1 excludes the gold document, T2 adds every directly
+co-annotated article, T3 adds every bridge terminal.
 
-A trustworthy system is monotonic, low at T0 and high at T3. Both ends must be reported, because otherwise high refusal is indistinguishable from refusing everything.
+A trustworthy system is monotonic, low at T0 and high at T3. Both ends must be reported,
+because otherwise high refusal is indistinguishable from refusing everything.
 
 ```
 #### OUTPUT ####
@@ -1085,35 +1108,46 @@ A trustworthy system is monotonic, low at T0 and high at T3. Both ends must be r
   causal effect T3-T0: +92.5 points
 ```
 
-**Seven and a half percent up to one hundred percent, monotonic, a causal effect of 92.5 points.** Two readings inside the curve matter more.
+**Seven and a half percent up to one hundred percent, monotonic, a causal effect of 92.5
+points.** Two readings inside the curve matter more.
 
-Press enter or click to view image in full size
 
-The same question with progressively less evidence left in the graph (Created by Fareed Khan )
+
+The same question with progressively less evidence left in the graph (Created by Fareed
+Khan )
 
 ![Image](structuring-docs-knowledge-graph_artifacts/image_000026_b5b70facd559760c86b69f0647f739762342941f9db7fd17cbd427354ca083c4.png)
 
-**T1 is identical to T0.** Removing the single gold document changed nothing, so no paper is ever the sole evidence in forty million documents.
+**T1 is identical to T0.** Removing the single gold document changed nothing, so no paper
+is ever the sole evidence in forty million documents.
 
-And **T2 is only 20.8%** , so 79% of questions survive losing all their direct evidence, because citation bridges give the graph real redundancy.
+And **T2 is only 20.8%** , so 79% of questions survive losing all their direct evidence,
+because citation bridges give the graph real redundancy.
 
-Press enter or click to view image in full size
 
-Refusal tracks how much evidence is left, and it says which gate fired (Created by Fareed Khan )
+
+Refusal tracks how much evidence is left, and it says which gate fired (Created by Fareed
+Khan )
 
 ![Image](structuring-docs-knowledge-graph_artifacts/image_000027_9c1e543d2530e71af3aa2715d79d78fd3aee13c90b6883c00892d6085db164ff.png)
 
-T3 deletes every path and then observes refusal, which is close to definitional. The informative tiers are T1 and T2, and the defensible claim is that refusal tracks evidence availability.
+T3 deletes every path and then observes refusal, which is close to definitional. The
+informative tiers are T1 and T2, and the defensible claim is that refusal tracks evidence
+availability.
 
 ## Embedding 28.3 Million Abstracts, and Why the GPU Was Idle
 
-Ranking within a path set needs semantics, so the quotable corpus gets embedded. My first loop ran at a fraction of the hardware.
+Ranking within a path set needs semantics, so the quotable corpus gets embedded. My first
+loop ran at a fraction of the hardware.
 
-A 33 million parameter model and a 110 million parameter model ran over the same texts at **the same texts per second** . The small one should be three times faster, so equal throughput means the GPU is idle.
+A 33 million parameter model and a 110 million parameter model ran over the same texts at
+**the same texts per second** . The small one should be three times faster, so equal
+throughput means the GPU is idle.
 
-The third version groups forty files into one super-shard, sorts it globally by length, and hands that to a persistent worker pool.
+The third version groups forty files into one super-shard, sorts it globally by length,
+and hands that to a persistent worker pool.
 
-```
+```python
 for grp in groups:
     all_texts, all_pmids, bounds = read_super_shard(grp)
 
@@ -1151,25 +1185,32 @@ for grp in groups:
   v3  super-shards (~1M    workers amortised; length sort over a much larger pool
 ```
 
-**Six hundred and twenty texts per second became 3,718, six times faster, and the model never changed.** Against the measured ceiling of 13,396 that is about 28%, and the first version was under 5%. Every point came from feeding the GPU.
+**Six hundred and twenty texts per second became 3,718, six times faster, and the model
+never changed.** Against the measured ceiling of 13,396 that is about 28%, and the first
+version was under 5%. Every point came from feeding the GPU.
 
-Press enter or click to view image in full size
+
 
 The whole job priced by the feed rate (Created by Fareed Khan )
 
 ![Image](structuring-docs-knowledge-graph_artifacts/image_000028_faa845f98f00e0ba2a1a808e7373ccf3b58fd3e31e2d13f541ebb91d0b7aa964.png)
 
-Press enter or click to view image in full size
+
 
 The three iterations, and the ceiling they were measured against (Created by Fareed Khan )
 
 ![Image](structuring-docs-knowledge-graph_artifacts/image_000029_5de4639233e11d60f6b662cf947d015ebf92215fa06327a11b1741ecf5a5d46c.png)
 
-Two bugs here were silent. **Setting** `TOKENIZERS_PARALLELISM=true` **alongside DataLoader workers deadlocks** , because the Rust tokenizer's thread pool does not survive a `fork()` , the symptom being fourteen live processes at zero percent GPU with no error.
+Two bugs here were silent. **Setting** `TOKENIZERS_PARALLELISM=true` **alongside
+DataLoader workers deadlocks** , because the Rust tokenizer's thread pool does not survive
+a `fork()` , the symptom being fourteen live processes at zero percent GPU with no error.
 
-The second is a query shape. `ORDER BY pmid LIMIT n OFFSET s*n` sorts 28.3 million rows once per shard. The corpus is already 1,334 Parquet files on disk, so following that layout removes the sort, matches checkpoints to the source, and lets the run survive a preemption.
+The second is a query shape. `ORDER BY pmid LIMIT n OFFSET s*n` sorts 28.3 million rows
+once per shard. The corpus is already 1,334 Parquet files on disk, so following that
+layout removes the sort, matches checkpoints to the source, and lets the run survive a
+preemption.
 
-Press enter or click to view image in full size
+
 
 The GPU was never the bottleneck, the feed was (Created by Fareed Khan )
 
@@ -1177,13 +1218,18 @@ The GPU was never the bottleneck, the feed was (Created by Fareed Khan )
 
 ## Consolidating the Index, and Checking It Before Trusting It
 
-Embedding produced 1,334 shards. The first ranker scanned all of them per question and cached the result, but keyed the cache to the **first** question's identifier set. Every later question silently scored minus one and fell back to arbitrary order.
+Embedding produced 1,334 shards. The first ranker scanned all of them per question and
+cached the result, but keyed the cache to the **first** question's identifier set. Every
+later question silently scored minus one and fell back to arbitrary order.
 
-Nothing errored. The answers simply got worse, the second time in this project a bug produced a plausible number rather than a crash, so the fix was structural.
+Nothing errored. The answers simply got worse, the second time in this project a bug
+produced a plausible number rather than a crash, so the fix was structural.
 
-Consolidation is two passes and never holds the index in memory. The first stable-sorts every identifier and asserts uniqueness. The second builds an inverse permutation, streams each shard into its rows of a memory-mapped output, then verifies against the sources.
+Consolidation is two passes and never holds the index in memory. The first stable-sorts
+every identifier and asserts uniqueness. The second builds an inverse permutation, streams
+each shard into its rows of a memory-mapped output, then verifies against the sources.
 
-```
+```python
 rng = np.random.default_rng(0)
 ok = 0
 for _ in range(5):
@@ -1204,33 +1250,47 @@ assert ok == 5, "consolidated index does not match its sources"
   index on disk    20.3 GiB
 ```
 
-**28,336,648 vectors at 384 dimensions in half precision, 20.3 GiB, consolidated in 51.7 seconds.** Lookup is a binary search plus one memory-mapped row read.
+**28,336,648 vectors at 384 dimensions in half precision, 20.3 GiB, consolidated in 51.7
+seconds.** Lookup is a binary search plus one memory-mapped row read.
 
-A separate audit compared the vector count against the quotable articles and found a gap of 2,134,898, which is 7.5% of the corpus. An index missing that much would silently degrade every ranking claim, so the audit walks four definitions of having an abstract, tests duplicate identifiers, and spot-checks sixty shards. The gap resolved, but I would not have known without looking.
+A separate audit compared the vector count against the quotable articles and found a gap
+of 2,134,898, which is 7.5% of the corpus. An index missing that much would silently
+degrade every ranking claim, so the audit walks four definitions of having an abstract,
+tests duplicate identifiers, and spot-checks sixty shards. The gap resolved, but I would
+not have known without looking.
 
-Press enter or click to view image in full size
 
-One thousand three hundred and thirty four shards, one sorted index (Created by Fareed Khan )
+
+One thousand three hundred and thirty four shards, one sorted index (Created by Fareed
+Khan )
 
 ![Image](structuring-docs-knowledge-graph_artifacts/image_000031_6262e6c3545b14caca1d81996e64fe06af5fd5925c77942545a35322f4907672.png)
 
 ## Gate Six, the Propositional Verifier
 
-Gates one to five are structural. A path proves that concepts co-occur and says **nothing** about whether the text supports the claim.
+Gates one to five are structural. A path proves that concepts co-occur and says
+**nothing** about whether the text supports the claim.
 
-Aspirin and Myocardial Infarction co-occur in 1,132 articles whether aspirin helps, harms, or does nothing. **Polarity is not a graph property.**
+Aspirin and Myocardial Infarction co-occur in 1,132 articles whether aspirin helps, harms,
+or does nothing. **Polarity is not a graph property.**
 
-Press enter or click to view image in full size
+
 
 The gate reads the neutral mass of an entailment model (Created by Fareed Khan )
 
 ![Image](structuring-docs-knowledge-graph_artifacts/image_000032_77f5176723cc893318148e2570c9a629f0a76b1f5c216e857b1a4caf063e935a.png)
 
-Gate six is propositional. Because it decides refusals it has to be validated independently, otherwise I am measuring my verifier's opinion of my verifier.
+Gate six is propositional. Because it decides refusals it has to be validated
+independently, otherwise I am measuring my verifier's opinion of my verifier.
 
-SciFact is the right instrument, because its expert-written claims carry a no-information label, the failure mode gates one to five cannot see. I scored three models on identical pairs, with hard negatives drawn from documents a claim cites but which are not evidence.
+SciFact is the right instrument, because its expert-written claims carry a no-information
+label, the failure mode gates one to five cannot see. I scored three models on identical
+pairs, with hard negatives drawn from documents a claim cites but which are not evidence.
 
-My first evaluation had a confound. It fed gold rationale **sentences for supported and contradicted but whole abstracts for no-information** , so a model could separate the classes on length alone. At inference we never know the rationale, so every class now gets the full abstract.
+My first evaluation had a confound. It fed gold rationale **sentences for supported and
+contradicted but whole abstracts for no-information** , so a model could separate the
+classes on length alone. At inference we never know the rationale, so every class now gets
+the full abstract.
 
 Then a short adaptation run, evaluated on a dev split the model never sees.
 
@@ -1251,28 +1311,36 @@ Then a short adaptation run, evaluated on a dev split the model never sees.
   adaptation: 919 SciFact train pairs, 3 epochs, ~100 s on the H100
 ```
 
-**Removing the leak dropped zero-shot macro-F1 from 0.597 to 0.464** , so a third of my first evaluation was measuring sentence length, not entailment.
+**Removing the leak dropped zero-shot macro-F1 from 0.597 to 0.464** , so a third of my
+first evaluation was measuring sentence length, not entailment.
 
-Adaptation then took **no-information detection from 0.722 to 0.932 in about a hundred seconds on 919 pairs** , while macro-F1 moved only plus 0.055. The model became a far better detector of the one class gate six needs, not a better three-way classifier.
+Adaptation then took **no-information detection from 0.722 to 0.932 in about a hundred
+seconds on 919 pairs** , while macro-F1 moved only plus 0.055. The model became a far
+better detector of the one class gate six needs, not a better three-way classifier.
 
-Press enter or click to view image in full size
 
-The verifier, adapted in a hundred seconds, and where it stops working (Created by Fareed Khan )
+
+The verifier, adapted in a hundred seconds, and where it stops working (Created by Fareed
+Khan )
 
 ![Image](structuring-docs-knowledge-graph_artifacts/image_000033_7575e157dab907802ccb63192767808a399ab68b6d1402f490982014c1424589.png)
 
 ## A Negative Result That Bounds the Claim
 
-MedREQAL looked like the ideal adversarial test. Its Cochrane verdicts include a large not-enough-information class where the papers **do** exist, so gates one to five answer and gate six should catch them.
+MedREQAL looked like the ideal adversarial test. Its Cochrane verdicts include a large
+not-enough-information class where the papers **do** exist, so gates one to five answer
+and gate six should catch them.
 
 Two hypotheses, written down before the run.
 
-- **H1** : gates one to five alone cannot separate not-enough-information from decided verdicts, so AUROC should be near 0.5.
+- **H1** : gates one to five alone cannot separate not-enough-information from decided
+  verdicts, so AUROC should be near 0.5.
 - **H2** : gate six can separate them, so AUROC should be well above 0.5.
 
 If H1 is false, my framing is wrong and gate six is unnecessary.
 
-MedREQAL questions are interrogative and the verifier was trained on declarative claims, so they have to be converted, and the conversion rate gets reported rather than assumed.
+MedREQAL questions are interrogative and the verifier was trained on declarative claims,
+so they have to be converted, and the conversion rate gets reported rather than assumed.
 
 ```
 #### OUTPUT ####
@@ -1292,15 +1360,19 @@ MedREQAL questions are interrogative and the verifier was trained on declarative
   H2 (propositional works) : REJECTED  (0.497)
 ```
 
-**H1 held and H2 was rejected.** Gate six scored 0.497 here, which is chance, despite scoring 0.932 on SciFact.
+**H1 held and H2 was rejected.** Gate six scored 0.497 here, which is chance, despite
+scoring 0.932 on SciFact.
 
-Instead of tuning I ran a diagnostic separating three explanations that demand opposite responses.
+Instead of tuning I ran a diagnostic separating three explanations that demand opposite
+responses.
 
 - **E1** : the verifier is broken and only looked good on SciFact.
 - **E2** : the verifier is fine and we retrieved the wrong evidence.
 - **E3** : the task is different in kind, so no per-document model can do it.
 
-The discriminating test hands the verifier Cochrane's **own conclusion field** , the text the verdict was based on, rather than our retrieved abstracts. If retrieval were the problem, the score jumps.
+The discriminating test hands the verifier Cochrane's **own conclusion field** , the text
+the verdict was based on, rather than our retrieved abstracts. If retrieval were the
+problem, the score jumps.
 
 ```
 #### OUTPUT ####
@@ -1309,37 +1381,45 @@ The discriminating test hands the verifier Cochrane's **own conclusion field** ,
   MedREQAL via Cochrane's OWN conclusion text : 0.544
 ```
 
-The verifier is unchanged at **0.932** , which rules out E1. Given the exact text the reviewers judged from, the score moved from 0.497 to 0.544, which rules out E2.
+The verifier is unchanged at **0.932** , which rules out E1. Given the exact text the
+reviewers judged from, the score moved from 0.497 to 0.544, which rules out E2.
 
-**E3 confirmed.** The not-enough-information label is not an entailment judgement. It encodes risk of bias, sample size and heterogeneity across trials, a meta-analytic assessment made from full texts that no abstract-level model can recover.
+**E3 confirmed.** The not-enough-information label is not an entailment judgement. It
+encodes risk of bias, sample size and heterogeneity across trials, a meta-analytic
+assessment made from full texts that no abstract-level model can recover.
 
-Press enter or click to view image in full size
 
-Neither the structural gates nor the propositional one separates that label (Created by Fareed Khan )
+
+Neither the structural gates nor the propositional one separates that label (Created by
+Fareed Khan )
 
 ![Image](structuring-docs-knowledge-graph_artifacts/image_000034_fbeb168d216660c80f43842de53c670451f48c8f41bb36c91a31ed6f8820f5f5.png)
 
-That bounds my thesis. **Any retrieval system evaluated on MedREQAL abstention is being scored on a task it structurally cannot perform.**
+That bounds my thesis. **Any retrieval system evaluated on MedREQAL abstention is being
+scored on a task it structurally cannot perform.**
 
 ## Closing the Loop, From Question to Cited Answer
 
-This section produces an answer. **The model never decides what is true and never decides whether to answer.** The graph decides both.
+This section produces an answer. **The model never decides what is true and never decides
+whether to answer.** The graph decides both.
 
-Press enter or click to view image in full size
+
 
 Who is allowed to decide what, at each of the eight stages (Created by Fareed Khan )
 
 ![Image](structuring-docs-knowledge-graph_artifacts/image_000035_59f28dc658e8e8c9f833df99bebbf7d3ce9b94306f8493c432db6fc3e7bf765b.png)
 
-The ranker re-orders graph output and never adds a document. An earlier version cached scores keyed to the first question's pmid set across **1,334** shards, so every later question silently scored -1.0.
+The ranker re-orders graph output and never adds a document. An earlier version cached
+scores keyed to the first question's pmid set across **1,334** shards, so every later
+question silently scored -1.0.
 
-Press enter or click to view image in full size
+
 
 Ranking is a re-ordering, and it can never introduce a document (Created by Fareed Khan )
 
 ![Image](structuring-docs-knowledge-graph_artifacts/image_000036_20ed7ad681afe20c2d5237d5bcb192b2246b9f2c892a8d07f172f247b8c6cdb3.png)
 
-```
+```python
 class SemanticRanker:
     def rank(self, question, paths, top_k=8):
         # per call from a pmid-sorted memmap, never cached
@@ -1353,7 +1433,7 @@ class SemanticRanker:
 
 The prompt is constrained, and abstention is first-class.
 
-```
+```python
 ABSTAIN = "INSUFFICIENT_EVIDENCE"
 
 SYSTEM = (
@@ -1366,9 +1446,11 @@ SYSTEM = (
 
 ### Citation Validation That Validated Nothing
 
-The third silent bug made a safety claim vacuous. My parser matched one identifier per bracket, so **every identifier in a multi-citation bracket bypassed the check** , making my reported zero fabricated citations partly meaningless.
+The third silent bug made a safety claim vacuous. My parser matched one identifier per
+bracket, so **every identifier in a multi-citation bracket bypassed the check** , making
+my reported zero fabricated citations partly meaningless.
 
-```
+```python
 _CITE_BLOCK = re.compile(r"\[((?:\d{4,9})(?:\s*,\s*\d{4,9})*)\]")
 
 def _cited_ids(text):
@@ -1378,7 +1460,7 @@ def _cited_ids(text):
 
 The fix keeps only identifiers in the path set.
 
-```
+```python
 def _fix(m):
     keep = [x for x in re.split(r"\s*,\s*", m.group(1).strip())
             if int(x) in valid]
@@ -1389,7 +1471,7 @@ clean = _CITE_BLOCK.sub(_fix, raw)
 
 Demonstrated on a poisoned answer.
 
-```
+```python
 #### OUTPUT ####
   valid PMIDs in path set : [40466424, 41097011]
   model wrote             : Metformin works [40466424, 41097011, 99999999]. Also true [40466424]. Fabricated [12345678].
@@ -1399,9 +1481,10 @@ Demonstrated on a poisoned answer.
   12345678's bracket removed entirely. Neither reaches the user.
 ```
 
-**The invented identifier is stripped from its bracket, and the fabricated bracket is removed.**
+**The invented identifier is stripped from its bracket, and the fabricated bracket is
+removed.**
 
-Press enter or click to view image in full size
+
 
 Match the bracket, split it, keep only what the graph reached (Created by Fareed Khan )
 
@@ -1409,15 +1492,19 @@ Match the bracket, split it, keep only what the graph reached (Created by Fareed
 
 ### The Concatenation Bug That Looked Like Caution
 
-The fourth silent bug made the system look more careful while making it worse. Gate six first scored each claim against all eight passages concatenated, but the verifier was trained on claim against one abstract, so it returned neutral almost always. The **best single source** is the in-distribution premise and the correct question.
+The fourth silent bug made the system look more careful while making it worse. Gate six
+first scored each claim against all eight passages concatenated, but the verifier was
+trained on claim against one abstract, so it returned neutral almost always. The **best
+single source** is the in-distribution premise and the correct question.
 
-Press enter or click to view image in full size
 
-The gate, scored against the best single source rather than a concatenation (Created by Fareed Khan )
+
+The gate, scored against the best single source rather than a concatenation (Created by
+Fareed Khan )
 
 ![Image](structuring-docs-knowledge-graph_artifacts/image_000038_80cb40330851393e91ea81ab91a92ee4afdb531b9e3d974fefbca7fbc625e50b.png)
 
-```
+```python
 def check(self, ans, ranked, abstracts):
     srcs = [a for a in (abstracts.get(p.terminal_pmid, "") for _, p in ranked) if a]
     out = []
@@ -1441,7 +1528,7 @@ One claim, one evidence set.
 
 **A forty eight fold difference, from asking the verifier a question it was trained to answer.**
 
-Press enter or click to view image in full size
+
 
 One claim, one evidence set, two ways of asking (Created by Fareed Khan )
 
@@ -1482,31 +1569,36 @@ Three answered, three refused, zero fabricated citations. Now one in full.
     OK  neutrality=0.02  Aspirin reduces the risk of myocardial infarction.
     OK  neutrality=0.01  The POISE-2 trial indicated that perioperative aspirin increases
     OK  neutrality=0.01  The Aspirin Myocardial Infarction Study (AMIS) found a nonsignif
-    OK  neutrality=0.01  The RISC Group study demonstrated that aspirin reduced the risk 
+    OK  neutrality=0.01  The RISC Group study demonstrated that aspirin reduced the risk
     OK  neutrality=0.04  A randomized trial of low-dose aspirin in the primary prevention
 ```
 
-**Five atomic claims, each entailed by its cited abstract, with neutrality between 0.01 and 0.04 against a refusal threshold of 0.90.**
+**Five atomic claims, each entailed by its cited abstract, with neutrality between 0.01
+and 0.04 against a refusal threshold of 0.90.**
 
 Now the three refusals.
 
 ```
 #### OUTPUT ####
-  Does vitamin C cure schizophrenia by quantum entanglement?  
+  Does vitamin C cure schizophrenia by quantum entanglement?
       refused at generation / gate 6   reason=grounded  paths=59 usable=25
-  Wingardium leviosa quidditch broomstick aerodynamics        
+  Wingardium leviosa quidditch broomstick aerodynamics
       refused before generation   reason=no_mesh_entry_point  paths=0 usable=0
-  Is hydroxychloroquine effective against COVID-19?           
+  Is hydroxychloroquine effective against COVID-19?
       refused before generation   reason=no_evidence_as_of_date  paths=300 usable=0
 ```
 
-**Three refusals by three completely different mechanisms.** The invented spell dies at gate one, and the date-limited question finds three hundred paths and keeps zero.
+**Three refusals by three completely different mechanisms.** The invented spell dies at
+gate one, and the date-limited question finds three hundred paths and keeps zero.
 
-The vitamin C case matters most, because the graph **correctly answers** that ascorbic acid and schizophrenia are co-studied, and the generator abstains because the claim is not supported. That is why gate six exists.
+The vitamin C case matters most, because the graph **correctly answers** that ascorbic
+acid and schizophrenia are co-studied, and the generator abstains because the claim is not
+supported. That is why gate six exists.
 
-An unsupported claim is **dropped** , and the answer is refused only when nothing survives.
+An unsupported claim is **dropped** , and the answer is refused only when nothing
+survives.
 
-Press enter or click to view image in full size
+
 
 What each question cost, from arrival to verdict (Created by Fareed Khan )
 
@@ -1530,9 +1622,11 @@ The thesis was economic before epistemic. Here is the ledger.
   TOTAL LLM CALLS TO BUILD THE GRAPH                                          0
 ```
 
-**Zero model calls to build any of it, in about two and a half hours end to end including acquisition.** The 2.12 hour embedding figure is a projection from the measured 3,718 texts per second, not a stopwatch reading.
+**Zero model calls to build any of it, in about two and a half hours end to end including
+acquisition.** The 2.12 hour embedding figure is a projection from the measured 3,718
+texts per second, not a stopwatch reading.
 
-Press enter or click to view image in full size
+
 
 What the build cost, and what the alternative costs (Created by Fareed Khan )
 
@@ -1540,11 +1634,14 @@ What the build cost, and what the alternative costs (Created by Fareed Khan )
 
 ## Where Questions Actually Die
 
-Everything so far has been per-component. Now I want the numbers a reviewer asks for, over a large question set, starting with an **unfakeable** negative.
+Everything so far has been per-component. Now I want the numbers a reviewer asks for, over
+a large question set, starting with an **unfakeable** negative.
 
-For each real question I built a matched control by swapping one concept for a random unrelated descriptor. It reads like a well-formed medical question, but the evidence does not exist, so **the label follows from the construction, not a judgement call** .
+For each real question I built a matched control by swapping one concept for a random
+unrelated descriptor. It reads like a well-formed medical question, but the evidence does
+not exist, so **the label follows from the construction, not a judgement call** .
 
-```
+```python
 seed_ok_idx = np.where(np.asarray(S.seed_ok))[0]
 ctrl = []
 for i in pick:
@@ -1555,13 +1652,14 @@ for i in pick:
         ctrl.append((int(i), q, [br[0], (ui_rand, ui_rand)]))
 ```
 
-Press enter or click to view image in full size
+
 
 One concept swapped, and the label follows from the construction (Created by Fareed Khan )
 
 ![Image](structuring-docs-knowledge-graph_artifacts/image_000042_79531d9ed43bee64b3df3cf34729f3426517639cd2db4a7bf5e76263cb8a67f2.png)
 
-A system that pattern-matches on looks medical answers both. A system that checks the graph answers only the first.
+A system that pattern-matches on looks medical answers both. A system that checks the
+graph answers only the first.
 
 ```
 #### OUTPUT ####
@@ -1573,11 +1671,13 @@ A system that pattern-matches on looks medical answers both. A system that check
   control median co-annotated articles          0  mean          1
 ```
 
-**Real questions have a mean co-annotation of 2,281 articles and controls have a mean of one.** The median is zero on both sides because the distribution is so skewed.
+**Real questions have a mean co-annotation of 2,281 articles and controls have a mean of
+one.** The median is zero on both sides because the distribution is so skewed.
 
-The pipeline shipped with a minimum path requirement of three because three felt reasonable, which is not defensible, so I swept it.
+The pipeline shipped with a minimum path requirement of three because three felt
+reasonable, which is not defensible, so I swept it.
 
-Press enter or click to view image in full size
+
 
 Coverage minus leak is the only quantity that improves (Created by Fareed Khan )
 
@@ -1585,7 +1685,7 @@ Coverage minus leak is the only quantity that improves (Created by Fareed Khan )
 
 ```
 #### OUTPUT ####
-     k    coverage   control leak    
+     k    coverage   control leak
   --------------------------------------
      1       41.0%          30.6%
      2       40.6%          22.8%
@@ -1598,15 +1698,19 @@ Coverage minus leak is the only quantity that improves (Created by Fareed Khan )
     50       32.4%           1.7%
 ```
 
-**At the shipped threshold the system answers one in six questions for which no evidence exists.** Moving to eight costs 1.8 coverage points and removes 59% of the leak, the difference between a system that refuses and one that mostly refuses.
+**At the shipped threshold the system answers one in six questions for which no evidence
+exists.** Moving to eight costs 1.8 coverage points and removes 59% of the leak, the
+difference between a system that refuses and one that mostly refuses.
 
-Press enter or click to view image in full size
+
 
 The threshold was intuition until the curve was drawn (Created by Fareed Khan )
 
 ![Image](structuring-docs-knowledge-graph_artifacts/image_000044_947855db6e65b299fa13b4782dac589cbf8f18f2281f38f3b25929ef35a93d41.png)
 
-The threshold moves twice more. The margin peak shifts to twelve once the grounder improves, and the final scorecard uses twenty, because leak then mattered more than coverage.
+The threshold moves twice more. The margin peak shifts to twelve once the grounder
+improves, and the final scorecard uses twenty, because leak then mattered more than
+coverage.
 
 Now the funnel, which names the real limitation.
 
@@ -1624,9 +1728,12 @@ Now the funnel, which names the real limitation.
   every graph gate combined accounts for 6%.
 ```
 
-**Two hundred and sixty eight of five hundred questions never reach the graph at all, and only twenty six die because the graph has no path.** Every graph gate combined accounts for six percent of the loss, so grounding is the binding constraint and I had been optimising the wrong end.
+**Two hundred and sixty eight of five hundred questions never reach the graph at all, and
+only twenty six die because the graph has no path.** Every graph gate combined accounts
+for six percent of the loss, so grounding is the binding constraint and I had been
+optimising the wrong end.
 
-Press enter or click to view image in full size
+
 
 Attrition is grounding, and it is not close (Created by Fareed Khan )
 
@@ -1634,9 +1741,13 @@ Attrition is grounding, and it is not close (Created by Fareed Khan )
 
 ## Fixing the Binding Constraint With a Learned Linker
 
-The lexical grounder needs an exact normalised string, and real questions paraphrase, abbreviate and use lay language. A lexical rule cannot tell circumcision from affect, so head-noun matching failed on precision.
+The lexical grounder needs an exact normalised string, and real questions paraphrase,
+abbreviate and use lay language. A lexical rule cannot tell circumcision from affect, so
+head-noun matching failed on precision.
 
-The industry answer is a learned linker that embeds the concept vocabulary and retrieves by similarity. **The dense side has to be span-based** , because embedding a whole question conflates its concepts into one vector and a bridge needs both ends separately.
+The industry answer is a learned linker that embeds the concept vocabulary and retrieves
+by similarity. **The dense side has to be span-based** , because embedding a whole
+question conflates its concepts into one vector and a bridge needs both ends separately.
 
 ```
 #### OUTPUT ####
@@ -1652,11 +1763,13 @@ The industry answer is a learned linker that embeds the concept vocabulary and r
     'keyhole surgery complications'                 -> Intraoperative Compl.   0.80
 ```
 
-**Water pill resolves to Antihypertensive Agents and keyhole surgery to Intraoperative Complications.** No lexical rule reaches those, and 149 MiB is a small price.
+**Water pill resolves to Antihypertensive Agents and keyhole surgery to Intraoperative
+Complications.** No lexical rule reaches those, and 149 MiB is a small price.
 
-Now the hybrid grounder. Function words never start or end a span, because fragments like of the heart embed to plausible nonsense.
+Now the hybrid grounder. Function words never start or end a span, because fragments like
+of the heart embed to plausible nonsense.
 
-```
+```python
 class HybridGrounder:
     """Lexical is certain. Dense is admitted only above a calibrated threshold,
     and never overwrites a lexical hit on the same span."""
@@ -1676,9 +1789,10 @@ class HybridGrounder:
         return out
 ```
 
-Scoring every span against every surface in one batch is where the GPU earns its place, one scatter\_reduce collapsing 203,462 surfaces onto 31,110 descriptors.
+Scoring every span against every surface in one batch is where the GPU earns its place,
+one scatter\_reduce collapsing 203,462 surfaces onto 31,110 descriptors.
 
-```
+```python
 @torch.no_grad()
 def _dense(self, spans):
     e = self.tok([s for _, _, s in spans], return_tensors="pt", padding=True,
@@ -1709,9 +1823,11 @@ And now the result that nearly killed the whole thing.
   like a mistake - it grounds 'winter' to Snow at 0.90.
 ```
 
-**Precision falls from 0.675 to 0.585 at the tightest threshold and keeps falling.** On the component metric that is disqualifying, and I had just argued that component metrics catch mistakes.
+**Precision falls from 0.675 to 0.585 at the tightest threshold and keeps falling.** On
+the component metric that is disqualifying, and I had just argued that component metrics
+catch mistakes.
 
-Press enter or click to view image in full size
+
 
 Lowering the threshold buys coverage with precision (Created by Fareed Khan )
 
@@ -1719,9 +1835,12 @@ Lowering the threshold buys coverage with precision (Created by Fareed Khan )
 
 ### Why the Component Metric Was the Wrong Question
 
-A spurious concept only harms if it **survives the co-annotation pair selection downstream** , and winter grounding to Snow co-annotates with nothing in the question, so the graph discards it unprompted.
+A spurious concept only harms if it **survives the co-annotation pair selection
+downstream** , and winter grounding to Snow co-annotates with nothing in the question, so
+the graph discards it unprompted.
 
-The correct test is therefore system-level, with both halves reported together. Does coverage rise, and does leak rise with it?
+The correct test is therefore system-level, with both halves reported together. Does
+coverage rise, and does leak rise with it?
 
 ```
 #### OUTPUT ####
@@ -1738,21 +1857,27 @@ The correct test is therefore system-level, with both halves reported together. 
   on both axes. Component precision was measuring the wrong thing.
 ```
 
-**Coverage rises fourteen points and leak falls 1.4 points, which is strictly better on both axes at once.** A grounder that raised both equally would have bought nothing, and the component metric pointed the wrong way.
+**Coverage rises fourteen points and leak falls 1.4 points, which is strictly better on
+both axes at once.** A grounder that raised both equally would have bought nothing, and
+the component metric pointed the wrong way.
 
-Press enter or click to view image in full size
+
 
 The linker loses on precision and wins on margin (Created by Fareed Khan )
 
 ![Image](structuring-docs-knowledge-graph_artifacts/image_000047_d9f891b3ca6217f93bba7249ab404f1c75a1426a5d840b67014da58ed7a3eaa4.png)
 
-The lesson is not that component metrics do not matter. It is that **a component metric is only valid if it models what happens downstream** , and mine did not model a filter sitting in the pipeline.
+The lesson is not that component metrics do not matter. It is that **a component metric is
+only valid if it models what happens downstream** , and mine did not model a filter
+sitting in the pipeline.
 
 ## The Agent, Built and Measured and Rejected
 
-Up to here the system is a pipeline with a guard, and calling it an agent would overclaim. A genuine agent adds a **feedback edge** that acts on the graph's own structure when evidence is insufficient, so I built one as a state machine with seven nodes and one loop.
+Up to here the system is a pipeline with a guard, and calling it an agent would overclaim.
+A genuine agent adds a **feedback edge** that acts on the graph's own structure when
+evidence is insufficient, so I built one as a state machine with seven nodes and one loop.
 
-```
+```python
 def _build(self):
     g = StateGraph(AgentState)          # plan, retrieve, grade, refine,
     for n, f in NODES:                  # generate, verify, adjudicate,
@@ -1775,7 +1900,7 @@ def _build(self):
 
 The refinement node has three strategies, in order of principle.
 
-```
+```python
 def n_refine(self, st: AgentState) -> AgentState:
     st["hops"] += 1
     applied = None
@@ -1797,13 +1922,17 @@ def n_refine(self, st: AgentState) -> AgentState:
     return st
 ```
 
-Broadening is the principled one, walking up curated `BROADER` edges so a rare drug becomes its drug class, and every broadened concept keeps real provenance. Relaxing is unprincipled, so it happens once per question and the trace records it.
+Broadening is the principled one, walking up curated `BROADER` edges so a rare drug
+becomes its drug class, and every broadened concept keeps real provenance. Relaxing is
+unprincipled, so it happens once per question and the trace records it.
 
-**The loop has to recover real questions without answering more impossible ones.** A loop that keeps trying until something comes back is a slower way to be wrong.
+**The loop has to recover real questions without answering more impossible ones.** A loop
+that keeps trying until something comes back is a slower way to be wrong.
 
-Press enter or click to view image in full size
 
-The loop, the three strategies, and the one edge that makes it an agent (Created by Fareed Khan )
+
+The loop, the three strategies, and the one edge that makes it an agent (Created by Fareed
+Khan )
 
 ![Image](structuring-docs-knowledge-graph_artifacts/image_000048_b65194fcbd4f1869ec8666f03ae901acae3ae6c4a044e4470fb59653a1f05c7d.png)
 
@@ -1819,19 +1948,27 @@ The loop, the three strategies, and the one edge that makes it an agent (Created
   hops used when answering: {0: 69, 1: 2, 2: 1, 3: 1}
 ```
 
-**The agent rescued two real questions and newly leaked three controls, and its margin is 2.5 points worse than the pipeline it was supposed to improve.** Of the questions it answered, sixty nine used no refinement at all.
+**The agent rescued two real questions and newly leaked three controls, and its margin is
+2.5 points worse than the pipeline it was supposed to improve.** Of the questions it
+answered, sixty nine used no refinement at all.
 
-Press enter or click to view image in full size
+
 
 The loop cost more margin than it bought (Created by Fareed Khan )
 
 ![Image](structuring-docs-knowledge-graph_artifacts/image_000049_0c4077861869341fbb9d78ec6fbabd66ade397719e6e9f9d1030dd0180f55808.png)
 
-When the pipeline refuses, it is overwhelmingly because grounding yielded fewer than two concepts, or because the two concepts are genuinely not co-studied. **Broadening fixes neither.** One concept broadened is still one concept, and unrelated parents that are co-studied give evidence about the parents. The loop treats a downstream symptom of an upstream failure.
+When the pipeline refuses, it is overwhelmingly because grounding yielded fewer than two
+concepts, or because the two concepts are genuinely not co-studied. **Broadening fixes
+neither.** One concept broadened is still one concept, and unrelated parents that are
+co-studied give evidence about the parents. The loop treats a downstream symptom of an
+upstream failure.
 
-The second error was mine. My first two versions folded semantic relevance into a **weighted average at 0.35** , which lets a strong structural score compensate for irrelevant evidence, exactly what a broadened control pair produces.
+The second error was mine. My first two versions folded semantic relevance into a
+**weighted average at 0.35** , which lets a strong structural score compensate for
+irrelevant evidence, exactly what a broadened control pair produces.
 
-```
+```python
 def _after_grade(self, st):
     """Conjunctive gating. Semantic relevance is a CONSTRAINT, not a term."""
     struct_ok = st["grade"] >= self.grade_ok and st["n_usable"] >= self.min_paths
@@ -1840,11 +1977,16 @@ def _after_grade(self, st):
     return "refine" if st["hops"] < self.max_hops else "dead"
 ```
 
-**I had built a score where a constraint was needed** , because a gate has to be able to veto. Fixing that cut the leak from 5.0 to 4.1 and cost more coverage than it saved, which is how the agent row ends up worse.
+**I had built a score where a constraint was needed** , because a gate has to be able to
+veto. Fixing that cut the leak from 5.0 to 4.1 and cost more coverage than it saved, which
+is how the agent row ends up worse.
 
 ### The Signal That Does Work
 
-Broadening raises co-annotation for real and random pairs alike, destroying discrimination. Question-to-evidence similarity is **independent of graph structure** , because a control pair retrieves abstracts that are not about the question however broadly we search.
+Broadening raises co-annotation for real and random pairs alike, destroying
+discrimination. Question-to-evidence similarity is **independent of graph structure** ,
+because a control pair retrieves abstracts that are not about the question however broadly
+we search.
 
 ```
 #### OUTPUT ####
@@ -1855,29 +1997,38 @@ Broadening raises co-annotation for real and random pairs alike, destroying disc
   mean top-8 similarity           0.795     0.655    0.939
 ```
 
-**Top-1 similarity separates real questions from impossible ones at AUROC 0.948** , a signal the graph structurally cannot provide. It went into the agent as the conjunctive veto and still did not rescue the loop, because it was fixing the wrong stage.
+**Top-1 similarity separates real questions from impossible ones at AUROC 0.948** , a
+signal the graph structurally cannot provide. It went into the agent as the conjunctive
+veto and still did not rescue the loop, because it was fixing the wrong stage.
 
-A signal the graph cannot provide, on a population the graph cannot separate (Created by Fareed Khan )
+A signal the graph cannot provide, on a population the graph cannot separate (Created by
+Fareed Khan )
 
 ![Image](structuring-docs-knowledge-graph_artifacts/image_000050_19e75fea57bcf9ebceeac138c12b75d55f215ec5b7474ff610a387284512579a.png)
 
-The agent stays in the repository as a measured ablation rather than the headline. Reporting it as the architecture would describe a diagram rather than a result.
+The agent stays in the repository as a measured ablation rather than the headline.
+Reporting it as the architecture would describe a diagram rather than a result.
 
 ## The Measurement Everything Else Was Standing In For
 
-Every result so far concerns groundedness, coverage and refusal. **None of them show the answers are more often correct than ordinary vector retrieval.**
+Every result so far concerns groundedness, coverage and refusal. **None of them show the
+answers are more often correct than ordinary vector retrieval.**
 
-One warning covers this section and the four after it. Everything up to the correction ran through a harness that truncated every document to **1100 characters** , on two hundred questions, with the label parsed from free text by a regular expression. All three matter.
+One warning covers this section and the four after it. Everything up to the correction ran
+through a harness that truncated every document to **1100 characters** , on two hundred
+questions, with the label parsed from free text by a regular expression. All three matter.
 
-Press enter or click to view image in full size
 
-Four axes moved at once, and only one of them was ever swept alone (Created by Fareed Khan )
+
+Four axes moved at once, and only one of them was ever swept alone (Created by Fareed
+Khan )
 
 ![Image](structuring-docs-knowledge-graph_artifacts/image_000051_4b3414a1d410175492694ec2df39afed0acf9f4bef77ab789b72cd73c4ff61ea.png)
 
-Corpus, questions, generator and prompt are fixed, so the only variable is how evidence is found.
+Corpus, questions, generator and prompt are fixed, so the only variable is how evidence is
+found.
 
-```
+```python
 @torch.no_grad()
 def vector_search(question, k=TOPK):
     qv = torch.from_numpy(RK.embed_query(question)).cuda().half()
@@ -1885,11 +2036,13 @@ def vector_search(question, k=TOPK):
     return [int(idx_pmids[i]) for i in top.indices.cpu().numpy()], top.values.tolist()
 ```
 
-Beating a weak baseline proves nothing, so Arm A got 20.3 GiB of VRAM and an exhaustive scan.
+Beating a weak baseline proves nothing, so Arm A got 20.3 GiB of VRAM and an exhaustive
+scan.
 
-Press enter or click to view image in full size
 
-Selective accuracy, the one number that cannot be gamed by answering only the easy questions (Created by Fareed Khan )
+
+Selective accuracy, the one number that cannot be gamed by answering only the easy
+questions (Created by Fareed Khan )
 
 ![Image](structuring-docs-knowledge-graph_artifacts/image_000052_d779c8396731aebe18639184f3095abb0ead0ac6ab30f7edc05f2849506d99fa.png)
 
@@ -1908,11 +2061,14 @@ Selective accuracy, the one number that cannot be gamed by answering only the ea
     C graph + refusal gate          33.9%  does NOT beat the constant
 ```
 
-**Selective accuracy is 48.0% for vector retrieval and 20.0% for the gated graph, and neither beats a constant.** Always answering yes scores 51.0%.
+**Selective accuracy is 48.0% for vector retrieval and 20.0% for the gated graph, and
+neither beats a constant.** Always answering yes scores 51.0%.
 
-Both arms losing to a constant is not evidence that one beats the other. It is evidence that **this benchmark plus this generator cannot separate them** , and I should have asked why.
+Both arms losing to a constant is not evidence that one beats the other. It is evidence
+that **this benchmark plus this generator cannot separate them** , and I should have asked
+why.
 
-Press enter or click to view image in full size
+
 
 The constant predictor every result has to clear (Created by Fareed Khan )
 
@@ -1978,8 +2134,6 @@ Median rank zero, so **the ranker was never the problem** . Gold that reaches th
 
 My cap of 120 discarded candidates on 40.8% of questions, against a median set of 49 and a ninetieth percentile of 3,257. **The cap fell in the middle of the distribution.**
 
-Press enter or click to view image in full size
-
 The cap fell in the middle of the distribution (Created by Fareed Khan )
 
 ![Image](structuring-docs-knowledge-graph_artifacts/image_000055_aca17b2574b544ad95bd8d4d23b3385d3ffc0e9f6c647f8966f8fb61dbacdc56.png)
@@ -2004,8 +2158,6 @@ The arms are cumulative so the interaction is visible.
 
 Independent ablations would have concluded that minor topics hurt, dropping a fix worth five points.
 
-Press enter or click to view image in full size
-
 Three quarters of the gap is structural, one quarter was mine (Created by Fareed Khan )
 
 ![Image](structuring-docs-knowledge-graph_artifacts/image_000056_0537f97d8c9c6b9b16150190850040bc3d6c2d2742d83ce28f61a6a5eede0c11.png)
@@ -2019,8 +2171,6 @@ The conclusion is not that graphs do not work, but that I had given the graph th
 Retrieval is a recall problem and dense vectors win it. What they cannot do is say **why** a document is admissible evidence, or refuse when none is.
 
 If certification rejected gold as often as it rejected noise, the graph would add nothing.
-
-Press enter or click to view image in full size
 
 The three routes, verbatim from the rule the thesis rests on (Created by Fareed Khan )
 
@@ -2129,8 +2279,6 @@ The oracle, given the gold document **alone** , scores 75.0%. Dense retrieval pu
 
 Labels now come from **constrained decoding** , reading probability mass over the three label tokens, so the free-text regular expression leaves the loop.
 
-Press enter or click to view image in full size
-
 The label read as probability mass, not parsed out of prose (Created by Fareed Khan )
 
 ![Image](structuring-docs-knowledge-graph_artifacts/image_000060_1c281b86d11a3584838e3048791915c6a55032294a7fa8aecf298b8da849d63a.png)
@@ -2157,15 +2305,11 @@ Summing the lower-case and capitalised token per label matters, because a model 
 
 **A cross-encoder puts the gold document at rank one 99% of the time.** Ranking is finished, and the remaining gap is about reading rather than retrieval.
 
-Press enter or click to view image in full size
-
 Every extra passage is a chance to mislead (Created by Fareed Khan )
 
 ![Image](structuring-docs-knowledge-graph_artifacts/image_000061_55e6856ebfd52e8eef92a2c028ecd795e7008d2d72ee894574cfb3766caad98f.png)
 
 The model's confidence already predicts whether it is right, which returns at the end of this post.
-
-Press enter or click to view image in full size
 
 The model already knows when it is about to be wrong (Created by Fareed Khan )
 
@@ -2223,15 +2367,11 @@ Now the sweep. One constant, four values, everything else fixed: same thousand q
 
 **Raising one constant from 1100 to 3000 moved accuracy by 14.5 points.** The flat run from 3000 to 4000 is the control, because 99.6% of abstracts are complete by then, so the effect is truncation.
 
-Press enter or click to view image in full size
-
 One constant, four values, everything else held fixed (Created by Fareed Khan )
 
 ![Image](structuring-docs-knowledge-graph_artifacts/image_000063_df623a47e85357b8d3c7ce6fa281b1a26e1e7410fd34e40dbfcaebf83bac2dcb.png)
 
 It is the only comparison in the project with zero confounds, which is why I trust it.
-
-Press enter or click to view image in full size
 
 Where the cut fell, and what it removed (Created by Fareed Khan )
 
@@ -2240,8 +2380,6 @@ Where the cut fell, and what it removed (Created by Fareed Khan )
 ### The Rerun, and the Discipline Around It
 
 Regenerating the posterior cache made everything after it cheap. Sixteen candidates per question are scored **alone** , producing a full distribution over the three labels, so every decision rule, mixture weighting, k and abstention policy becomes arithmetic.
-
-Press enter or click to view image in full size
 
 Each document scored alone, then the posteriors mixed afterwards (Created by Fareed Khan )
 
@@ -2269,15 +2407,11 @@ def posteriors(users, sys_prompt, bs):
     return out
 ```
 
-Press enter or click to view image in full size
-
 The object that makes every later question arithmetic (Created by Fareed Khan )
 
 ![Image](structuring-docs-knowledge-graph_artifacts/image_000066_fcf52b9ba947a6d5223f3765cd4e5608305830a25975df981187453cb87b5400.png)
 
 Because the cache makes another configuration free, it is easy to fool yourself, so the split is enforced and never crossed.
-
-Press enter or click to view image in full size
 
 Four hundred to choose, six hundred to report, and they never meet (Created by Fareed Khan )
 
@@ -2303,8 +2437,6 @@ def fit_bias(p, idx, grid=np.arange(-3.0, 3.01, 0.05)):
     # edge for both classes, so the reported bias was an artefact of the grid.
 ```
 
-Press enter or click to view image in full size
-
 The optimum sitting on the edge of the window, which is how you know the window is wrong (Created by Fareed Khan )
 
 ![Image](structuring-docs-knowledge-graph_artifacts/image_000068_3184379b0c2aecd3ab86a15ea9bee0cfa021c0759459469e39ebf1341bd00b5c.png)
@@ -2315,8 +2447,6 @@ The optimum sitting on the edge of the window, which is how you know the window 
 
 Four hundred development questions choose the configuration and fit the decision rule. Six hundred held-out questions are scored once.
 
-Press enter or click to view image in full size
-
 The decision rule, one additive bias vector fitted on development data only (Created by Fareed Khan )
 
 ![Image](structuring-docs-knowledge-graph_artifacts/image_000069_0d98387c20600b67b84322cf78ec1c19fcca2f5505b672442023442c44eea254.png)
@@ -2325,8 +2455,8 @@ The decision rule, one additive bias vector fitted on development data only (Cre
 #### OUTPUT ####
   system                                          TEST          95% CI
   --------------------------------------------------------------------
-  blind (no evidence at all)                     37.2%                
-  majority class (constant 'yes')                53.3%                
+  blind (no evidence at all)                     37.2%
+  majority class (constant 'yes')                53.3%
   PREVIOUS BEST, trunc 1100                      68.8%    [65.0, 72.5]
   corrected, argmax                              82.3%    [79.3, 85.3]
   corrected + DEV-fitted calibration             83.2%    [80.2, 86.2]
@@ -2338,21 +2468,15 @@ The decision rule, one additive bias vector fitted on development data only (Cre
 
 **83.2% on six hundred held-out questions, with a 95% interval of 80.2 to 86.2, against a 53.3% majority floor and a 37.2% no-evidence floor.**
 
-Press enter or click to view image in full size
-
 Paired bootstrap over the same held-out questions (Created by Fareed Khan )
 
 ![Image](structuring-docs-knowledge-graph_artifacts/image_000070_f74a6e373f583e9700298fee970a4afc00b456509492322e7a415e49845a9e5d.png)
-
-Press enter or click to view image in full size
 
 Exact McNemar, where only the disagreements carry information (Created by Fareed Khan )
 
 ![Image](structuring-docs-knowledge-graph_artifacts/image_000071_d3a350922fe126d54ed4aa0df0a81590e6559533694a4c75cf1be7c0d1cbcb01.png)
 
 The winner **is** a plain cross-encoder top-one prompt, chosen over marginalisation, rank fusion, hybrid mixtures and prompt variants.
-
-Press enter or click to view image in full size
 
 The corrected result, and every configuration that lost (Created by Fareed Khan )
 
@@ -2370,8 +2494,6 @@ Two checks belong beside that number. The first is what picking a winner is wort
 
 **With the labels shuffled, the best of 137 configurations still clears the median by 3.5 points.** That is why the development and test split is not optional.
 
-Press enter or click to view image in full size
-
 What picking a winner is worth before it means anything (Created by Fareed Khan )
 
 ![Image](structuring-docs-knowledge-graph_artifacts/image_000073_a4b9e2563fb1fbb7001c7b3a02cb06f73607e63dfba4cd8a76c740e3cbd59042.png)
@@ -2386,19 +2508,13 @@ Marginalising over more documents mostly destroys accuracy (Created by Fareed Kh
 
 Uniform weighting falls from 82.3% at one document to 45.3% at sixteen, and only softmax holds up, never beating the top document alone. **The alternatives diluted a good answer with worse ones.**
 
-Press enter or click to view image in full size
-
 The three mixture weightings that were swept (Created by Fareed Khan )
 
 ![Image](structuring-docs-knowledge-graph_artifacts/image_000075_a7a60eb600151832a0a0c1d740dfbc49eb54a49370e5f2f688e07c58117f8b88.png)
 
-Press enter or click to view image in full size
-
 Reciprocal rank fusion, which needs no score normalisation (Created by Fareed Khan )
 
 ![Image](structuring-docs-knowledge-graph_artifacts/image_000076_5fd113ae519e75715f3f53d288409171b823350862cd3ede79b18bc17141d739.png)
-
-Press enter or click to view image in full size
 
 Max-confidence, letting the reader pick its own single document (Created by Fareed Khan )
 
@@ -2435,8 +2551,6 @@ Eighty four percent of the distraction gap was my harness. **It was the oracle r
 
 **The larger model was not worse.** It answered maybe 34% of the time on truncated abstracts and was scored wrong, but with the conclusion removed, maybe was the correct reading.
 
-Press enter or click to view image in full size
-
 Model scale, measured twice (Created by Fareed Khan )
 
 ![Image](structuring-docs-knowledge-graph_artifacts/image_000078_4836ad4038c3d33977aca79255dfedc3e89fcdb7d447139135b6a80bfc813178.png)
@@ -2445,8 +2559,6 @@ The notebook does not make the caveat that narrows that claim. Fitting the class
 
 So the statement is narrower than the one I first wrote. Comparing two models by argmax compares their thresholds as well as their knowledge, so most of the apparent scale effect was threshold and truncation explains the rest.
 
-Press enter or click to view image in full size
-
 Comparing two models by argmax compares their thresholds too (Created by Fareed Khan )
 
 ![Image](structuring-docs-knowledge-graph_artifacts/image_000079_87c518af9c8843df3f6efe65badcbd266bbfa496284e6e2abd62fce7c29d08f7.png)
@@ -2454,8 +2566,6 @@ Comparing two models by argmax compares their thresholds too (Created by Fareed 
 ### The Corrected Error Budget
 
 Every error on the six hundred held-out questions, assigned to exactly one cause.
-
-Press enter or click to view image in full size
 
 Every error assigned to exactly one cause (Created by Fareed Khan )
 
@@ -2489,23 +2599,17 @@ The retrieval bucket is 1.33% in both the old and corrected measurement, the int
 
 One caveat inverts something I said earlier. **The oracle arm is no longer an upper bound.** It read four thousand characters and was never re-run, so at the corrected truncation the deployed arm scores 82.3% and the oracle scores 76.7%. That bucket is not capacity, it is where both renderings fail, so any sentence about capturing a fraction of the headroom belongs to the old harness.
 
-Press enter or click to view image in full size
-
 Every arm at the corrected truncation, against the floor (Created by Fareed Khan )
 
 ![Image](structuring-docs-knowledge-graph_artifacts/image_000082_efc59797903cd5bfeb0f1119621b118245a1a5b6992f753ff1f5bd6f83100937.png)
 
 Is the maybe class reachable? The posterior ranks those questions at AUROC 0.755, so the information is present and the decision rule discards it. Calibration takes recall from zero to five of sixty two.
 
-Press enter or click to view image in full size
-
 What the calibration actually bought (Created by Fareed Khan )
 
 ![Image](structuring-docs-knowledge-graph_artifacts/image_000083_68f60a2426f6e11eb45dad1d8fe8dcaad093b153065c1c12b14f1352258c3479.png)
 
 But recovering it costs more yes and no accuracy than it buys. I swept the bias on the test set deliberately, the best case for that story, and it does not pay.
-
-Press enter or click to view image in full size
 
 Chasing the third class costs more than it returns (Created by Fareed Khan )
 
@@ -2563,8 +2667,6 @@ That used concept overlap, the crudest of three routes. Here is the full rule.
 ```
 
 **Path certification predicts correctness at AUROC 0.500, chance to three decimal places.** Certified questions are correct 82.2% of the time and refused questions 82.5%, so it declines questions it would have got right, at random. The two graph-specific routes fired on 15.1% of decisions and moved it from 0.519 to 0.497.
-
-Press enter or click to view image in full size
 
 Rank-based AUROC, with tied scores given their mean rank (Created by Fareed Khan )
 
@@ -2637,8 +2739,6 @@ ALL ANALYSES COMPLETE
 
 The run reproduces the published 83.2%, and **every value matched exactly** . The files are not byte-identical, because JSON key ordering differs, but every number is the same.
 
-Press enter or click to view image in full size
-
 What needs the box, and what runs on a laptop (Created by Fareed Khan )
 
 ![Image](structuring-docs-knowledge-graph_artifacts/image_000088_c9d47d02a236f076ebc67c09ce9f404da318f1cace9468f43164723aa3422ffd.png)
@@ -2679,105 +2779,46 @@ Collected in one place, because they share a signature.
   All five degraded silently. Four of the five made a metric IMPROVE.
 ```
 
-**All five degraded silently, and four of the five made a metric improve.** Add the truncation constant and that is six, all with the same shape.
+**All five degraded silently, and four of the five made a metric improve.** Add the
+truncation constant and that is six, all with the same shape.
 
-An end-to-end score cannot say that the thing it improved was the wrong thing, which is the argument for per-layer ground truth.
+An end-to-end score cannot say that the thing it improved was the wrong thing, which is
+the argument for per-layer ground truth.
 
 ## What Is Still Open
 
 Ranked by measured impact.
 
-1. **Grounding is still the ceiling** , causing 54% of all attrition, and the hybrid linker moved coverage from about 37% to about 60% rather than solving it.
-2. **Path existence is not claim truth.** A graph edge encodes aboutness, never polarity, so aspirin and myocardial infarction co-occur whether aspirin helps or harms.
-3. **The verifier is scoped to one task and I proved the boundary** , so treat 0.932 as scoped to SciFact.
-4. **The benchmark is close to exhausted.** At 82.4% accuracy with gold retrieved 97.4% of the time, it largely measures document identification, which needs no graph.
-5. **The cross-encoder reads only the first 900 characters** , the same class of constant as the one that cost fourteen points, and never swept.
-6. **Two-hop bridges were never implemented** , and a second hop needs the ranker to be load-bearing first.
+1. **Grounding is still the ceiling** , causing 54% of all attrition, and the hybrid
+   linker moved coverage from about 37% to about 60% rather than solving it.
+2. **Path existence is not claim truth.** A graph edge encodes aboutness, never polarity,
+   so aspirin and myocardial infarction co-occur whether aspirin helps or harms.
+3. **The verifier is scoped to one task and I proved the boundary** , so treat 0.932 as
+   scoped to SciFact.
+4. **The benchmark is close to exhausted.** At 82.4% accuracy with gold retrieved 97.4% of
+   the time, it largely measures document identification, which needs no graph.
+5. **The cross-encoder reads only the first 900 characters** , the same class of constant
+   as the one that cost fourteen points, and never swept.
+6. **Two-hop bridges were never implemented** , and a second hop needs the ranker to be
+   load-bearing first.
 
 ## Where This Leaves Us
 
-I set out to make hallucination become abstention, and to prove the abstention was enforced rather than hoped for.
+I set out to make hallucination become abstention, and to prove the abstention was
+enforced rather than hoped for.
 
-The enforcement machinery works and it is cheap. A 929-million-edge graph over forty million documents, built in ten point eight minutes for zero model calls, a grounder that cannot invent an identifier, five gates that run before the generator, and refusal tracking evidence availability causally from 7.5% to 100% across an ablation.
+The enforcement machinery works and it is cheap. A 929-million-edge graph over forty
+million documents, built in ten point eight minutes for zero model calls, a grounder that
+cannot invent an identifier, five gates that run before the generator, and refusal
+tracking evidence availability causally from 7.5% to 100% across an ablation.
 
-The governance thesis on top of it did not survive, because path certification predicts correctness at chance while the model's own confidence reaches 0.810.
+The governance thesis on top of it did not survive, because path certification predicts
+correctness at chance while the model's own confidence reaches 0.810.
 
-**So the architecture I would recommend is graph for retrieval and provenance, calibrated confidence for abstention.** I had assigned two jobs to one component.
+**So the architecture I would recommend is graph for retrieval and provenance, calibrated
+confidence for abstention.** I had assigned two jobs to one component.
 
-Every serious error here had the same signature, **a metric improved while the system got worse or stayed the same.**
+Every serious error here had the same signature, **a metric improved while the system got
+worse or stayed the same.**
 
 The failure mode is never exotic, always a plausible number that nobody tried to break.
-
-Thanks for reading this far.
-
-[AI](https://medium.com/tag/ai?source=post_page---footer_tags--92010e609dfa------------------------------------------)
-
-[Artificial Intelligence](https://medium.com/tag/artificial-intelligence?source=post_page---footer_tags--92010e609dfa------------------------------------------)
-
-[Data Science](https://medium.com/tag/data-science?source=post_page---footer_tags--92010e609dfa------------------------------------------)
-
-[Python](https://medium.com/tag/python?source=post_page---footer_tags--92010e609dfa------------------------------------------)
-
-[AI Agent](https://medium.com/tag/ai-agent?source=post_page---footer_tags--92010e609dfa------------------------------------------)
-
-Fareed Khan
-
-![Image](structuring-docs-knowledge-graph_artifacts/image_000089_e6d175367fa3449fab0c611b38c78d715be93fc763c0c3a9accad36090a8efa0.png)
-
-Fareed Khan
-
-![Image](structuring-docs-knowledge-graph_artifacts/image_000090_910ecc8a7f338906cdbaf0c1d9a817dd471de5c6f438e80ddbf4b92e5cc5ae61.png)
-
-Follow
-
-## [Written by Fareed Khan](https://medium.com/@fareedkhandev?source=post_page---post_author_info--92010e609dfa------------------------------------------)
-
-[78K followers](https://medium.com/@fareedkhandev/followers?source=post_page---post_author_info--92010e609dfa------------------------------------------)
-
-[0 following](https://medium.com/@fareedkhandev/following?source=post_page---post_author_info--92010e609dfa------------------------------------------)
-
-I write on AI, [https://www.linkedin.com/in/fareed-khan-dev/](https://www.linkedin.com/in/fareed-khan-dev/)
-
-Follow
-
-Level Up Coding
-
-![Image](structuring-docs-knowledge-graph_artifacts/image_000091_a13aa46090f18a530816cd61904a418bdd6245b98d1638a32e3912d6a42ee40a.png)
-
-Level Up Coding
-
-![Image](structuring-docs-knowledge-graph_artifacts/image_000092_455c26d8cca79da7672f4f406b895450aba52230295dfe3d92675d4180191e28.png)
-
-Follow
-
-## [Published in Level Up Coding](/?source=post_page---post_publication_info--92010e609dfa------------------------------------------)
-
-[372K followers](/followers?source=post_page---post_publication_info--92010e609dfa------------------------------------------)
-
-[Last published 1 day ago](/magnetic-levitation-with-an-esp32-b19cbba96e44?source=post_page---post_publication_info--92010e609dfa------------------------------------------)
-
-Coding tutorials and news. The developer homepage [gitconnected.com](http://gitconnected.com/) &amp;&amp; [skilled.dev](http://skilled.dev/) &amp;&amp; [levelup.dev](http://levelup.dev/)
-
-Follow
-
-[Help](https://help.medium.com/hc/en-us?source=post_page-----92010e609dfa------------------------------------------)
-
-[Status](https://status.medium.com/?source=post_page-----92010e609dfa------------------------------------------)
-
-[About](https://medium.com/about?autoplay=1&source=post_page-----92010e609dfa------------------------------------------)
-
-[Careers](https://medium.com/jobs-at-medium/work-at-medium-959d1a85284e?source=post_page-----92010e609dfa------------------------------------------)
-
-[Press](/data/prepared/mailto:pressinquiries@medium.com)
-
-[Blog](https://blog.medium.com/?source=post_page-----92010e609dfa------------------------------------------)
-
-[Store](https://medium.com/store)
-
-[Privacy](https://policy.medium.com/medium-privacy-policy-f03bf92035c9?source=post_page-----92010e609dfa------------------------------------------)
-
-[Rules](https://policy.medium.com/medium-rules-30e5502c4eb4?source=post_page-----92010e609dfa------------------------------------------)
-
-[Terms](https://policy.medium.com/medium-terms-of-service-9db0094a1e0f?source=post_page-----92010e609dfa------------------------------------------)
-
-[Text to speech](https://speechify.com/medium?source=post_page-----92010e609dfa------------------------------------------)
