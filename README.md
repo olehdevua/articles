@@ -14,7 +14,11 @@ the run is offline (`HF_HUB_OFFLINE=1`).
    ```
    It converts only files that have no `output/<name>.md` yet, or whose `.md`
    is older than the source. Docling itself has no skip option.
-3. Read `output/<name>.md`.
+   After converting, it rewrites table-of-contents links whose text matches a
+   heading to `#Heading-Slug` (case kept, punctuation dropped, spaces → `-`),
+   replacing the site URLs that saved web pages use.
+3. Read `output/<name>.md`. Images are in `output/<name>_artifacts/` as PNG
+   and linked from the `.md` by relative path.
 
 To force a re-convert of one file, delete its `.md` or `touch` the source.
 To convert everything regardless: `docker compose run --rm docling`.
@@ -37,6 +41,14 @@ All flags:
 ```sh
 docker compose run --rm --entrypoint docling docling convert --help
 ```
+
+## Images
+
+Set in `compose.yaml`:
+- `--image-export-mode referenced`: PNG files plus links. `embedded` puts
+  base64 in the `.md`; `placeholder` writes only `<!-- image -->`.
+- `--html-image-fetch all`: downloads `<img>` sources (usually a CDN), so an
+  HTML run needs network access. Without it HTML images are empty placeholders.
 
 ## Notes
 

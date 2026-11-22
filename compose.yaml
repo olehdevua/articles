@@ -8,6 +8,9 @@ services:
     volumes:
       - ./input:/data/input:ro
       - ./output:/data/output
+    # Relative --output makes docling write relative image links in the .md
+    # (an absolute one gives /data/output/... links that break on the host).
+    working_dir: /data/output
     entrypoint:
       - docling
       - convert
@@ -19,6 +22,12 @@ services:
       - html
       - --to
       - md
+      # Write images as PNG files next to the .md and link them.
+      - --image-export-mode
+      - referenced
+      # HTML <img> sources are usually remote (CDN); download them.
+      - --html-image-fetch
+      - all
       - --output
-      - /data/output
+      - .
     command: ["/data/input"]
