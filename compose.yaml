@@ -1,0 +1,24 @@
+services:
+  docling:
+    image: ghcr.io/docling-project/docling-serve-cpu:latest
+    user: "${UID:-1000}:${GID:-1000}"
+    environment:
+      # Models are pre-downloaded in the image; never fetch from Hugging Face.
+      HF_HUB_OFFLINE: "1"
+    volumes:
+      - ./input:/data/input:ro
+      - ./output:/data/output
+    entrypoint:
+      - docling
+      - convert
+      - --artifacts-path
+      - /opt/app-root/src/.cache/docling/models
+      - --from
+      - pdf
+      - --from
+      - html
+      - --to
+      - md
+      - --output
+      - /data/output
+    command: ["/data/input"]
