@@ -119,20 +119,26 @@ Here is everything we build, 46 Python modules with no graph database and no ext
 
 Every number and every log line in this post comes from runs on our own hardware. All of the code is available in my GitHub repository (theory plus code):
 
+## [GitHub - FareedKhan-dev/agentic-knowledge-graph: Knowledge-graph RAG built from structured metadata...](https://github.com/FareedKhan-dev/agentic-knowledge-graph?source=post_page-----92010e609dfa------------------------------------------)
+
+### [Knowledge-graph RAG built from structured metadata instead of LLM extraction. 929M edges, zero LLM calls, 83.2% on...](https://github.com/FareedKhan-dev/agentic-knowledge-graph?source=post_page-----92010e609dfa------------------------------------------)
+
+[github.com](https://github.com/FareedKhan-dev/agentic-knowledge-graph?source=post_page-----92010e609dfa------------------------------------------)
+
 The codebase is organized as follows.
 
 ```
 agentic-knowledge-graph/
-notebook/
-agentic_kg_40m.ipynb # the whole study, 196 cells and 29 figures
-pipeline/ # the 46 modules behind the graph
-parse_pubmed.py # 40M XML records to columnar Parquet
-build_graph4.py # the rebuild that fixed a silent alignment bug
-embed_corpus3.py # 28.3M abstracts, third iteration
-consolidate_index.py # 1,334 shards into one pmid-sorted memmap
-kg_ground3/4/5/6.py # the grounder, four measured versions
-kg_agent.py # the LangGraph machine, built and rejected
-results/ # 32 JSON result sets and 9 posterior caches
+  notebook/
+    agentic_kg_40m.ipynb    # the whole study, 196 cells and 29 figures
+  pipeline/                 # the 46 modules behind the graph
+    parse_pubmed.py         # 40M XML records to columnar Parquet
+    build_graph4.py         # the rebuild that fixed a silent alignment bug
+    embed_corpus3.py        # 28.3M abstracts, third iteration
+    consolidate_index.py    # 1,334 shards into one pmid-sorted memmap
+    kg_ground3/4/5/6.py     # the grounder, four measured versions
+    kg_agent.py             # the LangGraph machine, built and rejected
+  results/                  # 32 JSON result sets and 9 posterior caches
 ```
 
 One thing to state now rather than defend later. **The 929,824,202 in the title is what the parse produced, and the graph the agent walks is smaller.** Chemicals, publication types and corrections are parsed and stored, but traversal only ever uses citations and MeSH annotations, which is 740,464,909 edges. Both numbers are real and they measure different things.
@@ -155,21 +161,21 @@ import torch
 assert torch.cuda.is_available(), "CUDA unavailable - check the cu128 pin"
 
 # prove the GPU actually computes, rather than merely reporting itself present
-x = torch.randn( 8192 , 8192 , device= "cuda" , dtype=torch.float16)
+x = torch.randn(8192, 8192, device="cuda", dtype=torch.float16)
 torch.cuda.synchronize()
 _t = time.time()
-for _ in range ( 30 ):
-y = x @ x
+for _ in range(30):
+    y = x @ x
 torch.cuda.synchronize()
-print ( f"  fp16 matmul { 30 * 2 * 8192 ** 3 /(time.time()-_t)/ 1e12 : .1 f} TFLOP/s" )
+print(f"  fp16 matmul    {30*2*8192**3/(time.time()-_t)/1e12:.1f} TFLOP/s")
 ```
 
 ```
 #### OUTPUT ####
-torch          2.11.0+cu128
-cuda available True
-device         NVIDIA H100 PCIe  sm90  79.2 GiB  114 SMs
-fp16 matmul    195.1 TFLOP/s
+  torch          2.11.0+cu128
+  cuda available True
+  device         NVIDIA H100 PCIe  sm90  79.2 GiB  114 SMs
+  fp16 matmul    195.1 TFLOP/s
 ```
 
 **195.1 TFLOP/s in half precision** says the card is real and the driver stack is wired correctly. The driver is 570.195.03, which is CUDA 12.8, while current PyTorch and vLLM wheels are built against CUDA 13. Those wheels import cleanly and then report `torch.cuda.is_available() == False` , so the stack is pinned to `torch 2.11.0+cu128` and vLLM is unavailable for the whole project.
@@ -184,12 +190,12 @@ The download is where I got something wrong. My first attempt used 12 parallel j
 
 ```
 #### OUTPUT ####
-files          1334 / 1334
-total          50.5 GiB
-missing        none
-gzip-checked   10 sampled files, 0 corrupt
+  files          1334 / 1334
+  total          50.5 GiB
+  missing        none
+  gzip-checked   10 sampled files, 0 corrupt
 
-corpus verified
+  corpus verified
 ```
 
 All 1,334 files landed at 50.5 GiB, none missing and none corrupt. Everything the graph is built from is visible in one record.
@@ -197,39 +203,39 @@ All 1,334 files landed at 50.5 GiB, none missing and none corrupt. Everything th
 ```
 from lxml import etree
 
-with gzip. open (files[ 0 ], "rb" ) as fh:
-for _, art in etree.iterparse(fh, events=( "end" ,), tag= "PubmedArticle" ):
-pmid = art.findtext( ".//MedlineCitation/PMID" )
-title = (art.findtext( ".//Article/ArticleTitle" ) or "" )[: 72 ]
-mesh = [(d.get( "UI" ), d.get( "MajorTopicYN" ), d.text)
-for d in art.findall( ".//MeshHeadingList/MeshHeading/DescriptorName" )]
-refs = art.findall( ".//ReferenceList//Reference//ArticleId[@IdType='pubmed']" )
-cc = [(c.get( "RefType" ), c.findtext( "PMID" ))
-for c in art.findall( ".//CommentsCorrectionsList/CommentsCorrections" )]
-print ( f"  PMID          : {pmid} " )
-print ( f"  Title         : {title} ..." )
-print ( f"  Has abstract  : {art.find( './/Article/Abstract/AbstractText' ) is not None } " )
-print ( f"  MeSH headings : { len (mesh)} " )
-for ui, major, name in mesh[: 5 ]:
-print ( f" {ui} major= {major} {name} " )
-print ( f"  PubMed refs   : { len (refs)} " )
-print ( f"  Corrections   : {cc if cc else 'none' } " )
-break
+with gzip.open(files[0], "rb") as fh:
+    for _, art in etree.iterparse(fh, events=("end",), tag="PubmedArticle"):
+        pmid = art.findtext(".//MedlineCitation/PMID")
+        title = (art.findtext(".//Article/ArticleTitle") or "")[:72]
+        mesh = [(d.get("UI"), d.get("MajorTopicYN"), d.text)
+                for d in art.findall(".//MeshHeadingList/MeshHeading/DescriptorName")]
+        refs = art.findall(".//ReferenceList//Reference//ArticleId[@IdType='pubmed']")
+        cc = [(c.get("RefType"), c.findtext("PMID"))
+              for c in art.findall(".//CommentsCorrectionsList/CommentsCorrections")]
+        print(f"  PMID          : {pmid}")
+        print(f"  Title         : {title}...")
+        print(f"  Has abstract  : {art.find('.//Article/Abstract/AbstractText') is not None}")
+        print(f"  MeSH headings : {len(mesh)}")
+        for ui, major, name in mesh[:5]:
+            print(f"      {ui}  major={major}  {name}")
+        print(f"  PubMed refs   : {len(refs)}")
+        print(f"  Corrections   : {cc if cc else 'none'}")
+        break
 ```
 
 ```
 #### OUTPUT ####
-PMID          : 1
-Title         : Formate assay in body fluids: application in methanol poisoning....
-Has abstract  : False
-MeSH headings : 12
-D000445  major=N  Aldehyde Oxidoreductases
-D000818  major=N  Animals
-D001826  major=N  Body Fluids
-D002245  major=N  Carbon Dioxide
-D005561  major=N  Formates
-PubMed refs   : 0
-Corrections   : none
+  PMID          : 1
+  Title         : Formate assay in body fluids: application in methanol poisoning....
+  Has abstract  : False
+  MeSH headings : 12
+      D000445  major=N  Aldehyde Oxidoreductases
+      D000818  major=N  Animals
+      D001826  major=N  Body Fluids
+      D002245  major=N  Carbon Dioxide
+      D005561  major=N  Formates
+  PubMed refs   : 0
+  Corrections   : none
 ```
 
 **Every field in that output is published by NLM, and no model produced any of it.** The headings become the entity layer, the references become the citation edges, and the corrections list becomes the supersession layer behind the retraction gate. PMID 1 has twelve headings and no abstract, which matters later when only 70.9% of the corpus is quotable.
@@ -243,57 +249,57 @@ This step decides whether the idea is affordable. Microsoft's published GraphRAG
 So we extract nothing. Six tables, five of them edges, every row a field NLM already published. The parser is one function per file, and the lines that matter sit at the bottom of the loop.
 
 ```
-def parse_file ( path: str ) -> dict :
-rows = {t: [] for t in TABLES}
-with gzip. open (path, "rb" ) as fh:
-ctx = etree.iterparse(fh, events=( "end" ,), tag= "PubmedArticle" , huge_tree= True )
-for _, art in ctx:
-pmid = int (art.findtext( ".//MedlineCitation/PMID" ).strip())
+def parse_file(path: str) -> dict:
+    rows = {t: [] for t in TABLES}
+    with gzip.open(path, "rb") as fh:
+        ctx = etree.iterparse(fh, events=("end",), tag="PubmedArticle", huge_tree=True)
+        for _, art in ctx:
+            pmid = int(art.findtext(".//MedlineCitation/PMID").strip())
 
-for mh in art.findall( ".//MeshHeadingList/MeshHeading" ):
-d = mh.find( "DescriptorName" )
-major = d.get( "MajorTopicYN" ) == "Y"
-for q in mh.findall( "QualifierName" ) or [ None ]:
-rows[ "mesh_edges" ].append(
-(pmid, d.get( "UI" ),
-major or (q is not None and q.get( "MajorTopicYN" ) == "Y" ),
-q.get( "UI" ) if q is not None else None ))
+            for mh in art.findall(".//MeshHeadingList/MeshHeading"):
+                d = mh.find("DescriptorName")
+                major = d.get("MajorTopicYN") == "Y"
+                for q in mh.findall("QualifierName") or [None]:
+                    rows["mesh_edges"].append(
+                        (pmid, d.get("UI"),
+                         major or (q is not None and q.get("MajorTopicYN") == "Y"),
+                         q.get("UI") if q is not None else None))
 
-for aid in art.findall( ".//ReferenceList//Reference//ArticleId" ):
-if aid.get( "IdType" ) == "pubmed" :
-rows[ "citations" ].append((pmid, int (aid.text.strip())))
+            for aid in art.findall(".//ReferenceList//Reference//ArticleId"):
+                if aid.get("IdType") == "pubmed":
+                    rows["citations"].append((pmid, int(aid.text.strip())))
 
-# art.clear() alone is not enough, because iterparse still holds
-# every processed sibling and RSS grows with the file.
-art.clear()
-while art.getprevious() is not None :
-del art.getparent()[ 0 ]
+            # art.clear() alone is not enough, because iterparse still holds
+            # every processed sibling and RSS grows with the file.
+            art.clear()
+            while art.getprevious() is not None:
+                del art.getparent()[0]
 ```
 
 The 1,334 baseline files are independent, so the work is one operating-system process per file rather than threads.
 
 ```
 with Pool(args.procs) as pool:
-for r in pool.imap_unordered(parse_file, files):
-for k in tot:
-tot[k] += r[k]
+    for r in pool.imap_unordered(parse_file, files):
+        for k in tot:
+            tot[k] += r[k]
 ```
 
 ```
 #### OUTPUT ####
-table                     rows      GiB   shards
-------------------------------------------------
-articles            39,994,988    15.43     1334
-mesh_edges         396,187,851     1.08     1334
-citations          397,733,440     1.62     1334
-corrections          2,977,437     0.02     1334
-chemicals           65,594,027     0.31     1334
-pubtypes            67,331,447     0.20     1334
-------------------------------------------------
-NODES               39,994,988
-EDGES              929,824,202
+  table                     rows      GiB   shards
+  ------------------------------------------------
+  articles            39,994,988    15.43     1334
+  mesh_edges         396,187,851     1.08     1334
+  citations          397,733,440     1.62     1334
+  corrections          2,977,437     0.02     1334
+  chemicals           65,594,027     0.31     1334
+  pubtypes            67,331,447     0.20     1334
+  ------------------------------------------------
+  NODES               39,994,988
+  EDGES              929,824,202
 
-LLM calls used to build any of this: 0
+  LLM calls used to build any of this: 0
 ```
 
 **Thirty nine million, nine hundred and ninety four thousand, nine hundred and eighty eight articles and 929,824,202 edges, in 10.8 minutes at 61,449 records per second, for zero model calls.** The five edge families sum to the headline figure, and the article table is the node list, not a sixth family.
@@ -324,9 +330,9 @@ Induced-subgraph retention, the number that decided the corpus size (Created by 
 
 ```
 #### OUTPUT ####
-total citation edges          397,733,440
-cited_pmid inside corpus      397,731,791   (100.0%)
-dangling                            1,649   (0.0%)
+  total citation edges          397,733,440
+  cited_pmid inside corpus      397,731,791   (100.0%)
+  dangling                            1,649   (0.0%)
 ```
 
 **One hundred percent retention, with 1,649 dangling edges out of 397 million.** PubMed records a reference only after resolving it to a PMID, so the curator already did the join.
@@ -334,27 +340,27 @@ dangling                            1,649   (0.0%)
 Now the counterfactual, because the original plan was a recent ten million document slice.
 
 ```
-for n_slice in ( 5_000_000 , 10_000_000 , 20_000_000 ):
-con.execute( f"""CREATE OR REPLACE TEMP VIEW slice AS
-SELECT pmid FROM articles ORDER BY year DESC NULLS LAST
-LIMIT {n_slice} """ )
-out_e, ind = con.execute( """
-SELECT (SELECT count(*) FROM citations c
-WHERE EXISTS (SELECT 1 FROM slice s WHERE s.pmid=c.citing_pmid)),
-(SELECT count(*) FROM citations c
-WHERE EXISTS (SELECT 1 FROM slice s1 WHERE s1.pmid=c.citing_pmid)
-AND EXISTS (SELECT 1 FROM slice s2 WHERE s2.pmid=c.cited_pmid))
-""" ).fetchone()
+for n_slice in (5_000_000, 10_000_000, 20_000_000):
+    con.execute(f"""CREATE OR REPLACE TEMP VIEW slice AS
+                    SELECT pmid FROM articles ORDER BY year DESC NULLS LAST
+                    LIMIT {n_slice}""")
+    out_e, ind = con.execute("""
+        SELECT (SELECT count(*) FROM citations c
+                  WHERE EXISTS (SELECT 1 FROM slice s WHERE s.pmid=c.citing_pmid)),
+               (SELECT count(*) FROM citations c
+                  WHERE EXISTS (SELECT 1 FROM slice s1 WHERE s1.pmid=c.citing_pmid)
+                    AND EXISTS (SELECT 1 FROM slice s2 WHERE s2.pmid=c.cited_pmid))
+    """).fetchone()
 ```
 
 ```
 #### OUTPUT ####
-slice               outbound       induced  retained  MeSH cov
---------------------------------------------------------------
-recent   5M   106,790,051    11,178,083     10.5%     58.0%
-recent  10M   207,161,067    58,130,371     28.1%     63.6%
-recent  20M   344,441,335   212,602,515     61.7%     72.4%
-FULL 40M         397,733,440   397,731,791    100.0%
+  slice               outbound       induced  retained  MeSH cov
+  --------------------------------------------------------------
+  recent   5M   106,790,051    11,178,083     10.5%     58.0%
+  recent  10M   207,161,067    58,130,371     28.1%     63.6%
+  recent  20M   344,441,335   212,602,515     61.7%     72.4%
+  FULL 40M         397,733,440   397,731,791    100.0%
 ```
 
 **A recent ten million document slice keeps 28.1% of its citation edges and drops MeSH coverage to 63.6%.** I would have built a graph of stubs and measured its refusal rate without discovering that the paths were missing.
@@ -363,15 +369,15 @@ The era breakdown shows why no slice works.
 
 ```
 #### OUTPUT ####
-decade       articles   MeSH%  abstract%  mean refs
-1950           85,773   98.0%       0.4%        0.1
-1960          112,216   97.0%       1.1%        0.6
-1970          219,422   96.3%       4.1%        0.9
-1980          280,650   97.1%      46.0%        1.6
-1990          410,654   94.5%      69.9%        2.3
-2000          531,678   91.6%      76.4%        2.5
-2010          849,534   89.3%      84.7%       10.1
-2020        1,448,395   71.2%      86.9%       18.1
+  decade       articles   MeSH%  abstract%  mean refs
+  1950           85,773   98.0%       0.4%        0.1
+  1960          112,216   97.0%       1.1%        0.6
+  1970          219,422   96.3%       4.1%        0.9
+  1980          280,650   97.1%      46.0%        1.6
+  1990          410,654   94.5%      69.9%        2.3
+  2000          531,678   91.6%      76.4%        2.5
+  2010          849,534   89.3%      84.7%       10.1
+  2020        1,448,395   71.2%      86.9%       18.1
 ```
 
 Ninety eight percent MeSH coverage in the 1950s sits beside 0.4% abstracts, and recent decades are the mirror image because indexing lags publication. The two layers never co-occur, so **only the full corpus has both at once** and going bigger was necessity.
@@ -394,12 +400,12 @@ MeSH is not a vocabulary I picked. It is a curated hierarchical thesaurus every 
 
 ```
 #### OUTPUT ####
-mesh_descriptors     31,110
-mesh_tree            65,360
-mesh_broader         42,519
-mesh_allowable      633,885
-mesh_terms          267,012
-mesh_qualifiers          76
+  mesh_descriptors     31,110
+  mesh_tree            65,360
+  mesh_broader         42,519
+  mesh_allowable      633,885
+  mesh_terms          267,012
+  mesh_qualifiers          76
 ```
 
 **Broader edges** come from the tree, so hierarchy is free. The 633,885 allowable descriptor and qualifier pairs are a hard schema, so an edge outside that set is invalid, and the 267,012 entry terms are every synonym NLM recognises, so free text grounds without a model inventing identifiers.
@@ -413,24 +419,24 @@ Ancestry needs no reasoner, because the identifier already encodes the path (Cre
 ![Image](structuring-docs-knowledge-graph_artifacts/image_000009_9ce649f8cf10a9be7358b5123e37b9a9b936c0f4b1b8f59a71cdf9dd1d56d8db.png)
 
 ```
-probe = next (u for u, n in name_of.items() if n == "Myocardial Infarction" )
-print ( f"  ' {name_of[probe]} ' ( {probe} )  tree numbers: {ui2tn[probe]} " )
-print ( "  ancestry by STRING PREFIX - no graph walk, no Datalog:" )
-parts = ui2tn[probe][ 0 ].split( "." )
-for i in range ( 1 , len (parts) + 1 ):
-anc = "." .join(parts[:i])
-if anc in tn2ui:
-print ( f" {anc:< 20 } {name_of.get(tn2ui[anc], '?' )} " )
+probe = next(u for u, n in name_of.items() if n == "Myocardial Infarction")
+print(f"  '{name_of[probe]}' ({probe})  tree numbers: {ui2tn[probe]}")
+print("  ancestry by STRING PREFIX - no graph walk, no Datalog:")
+parts = ui2tn[probe][0].split(".")
+for i in range(1, len(parts) + 1):
+    anc = ".".join(parts[:i])
+    if anc in tn2ui:
+        print(f"      {anc:<20} {name_of.get(tn2ui[anc], '?')}")
 ```
 
 ```
 #### OUTPUT ####
-'Myocardial Infarction' (D009203)  tree numbers: [ 'C14.280.647.500' , 'C14.907.585.500' , 'C23.550.513.355.750' , 'C23.550.717.489.750' ]
-ancestry by STRING PREFIX - no graph walk, no Datalog:
-C14                  Cardiovascular Diseases
-C14.280              Heart Diseases
-C14.280.647          Myocardial Ischemia
-C14.280.647.500      Myocardial Infarction
+  'Myocardial Infarction' (D009203)  tree numbers: ['C14.280.647.500', 'C14.907.585.500', 'C23.550.513.355.750', 'C23.550.717.489.750']
+  ancestry by STRING PREFIX - no graph walk, no Datalog:
+      C14                  Cardiovascular Diseases
+      C14.280              Heart Diseases
+      C14.280.647          Myocardial Ischemia
+      C14.280.647.500      Myocardial Infarction
 ```
 
 **Four ancestors recovered by slicing a string on dots.** A reasoner would be slower and buy nothing, because the identifier already encodes the path.
@@ -451,9 +457,9 @@ Every supplementary record carries a `HeadingMappedTo` list pointing at main des
 
 ```
 #### OUTPUT ####
-supplementary records : 324,046
-heading mappings      : 449,171
-surface terms         : 729,017
+  supplementary records : 324,046
+  heading mappings      : 449,171
+  surface terms         : 729,017
 ```
 
 **324,046 supplementary records contributed 729,017 raw surface terms, with no new edges and no new model.** Grounding pembrolizumab now resolves through the alias, and traversal downstream is unchanged.
@@ -481,12 +487,12 @@ The whole traversal primitive, in one array slice (Created by Fareed Khan )
 The build is a counting pass and a stable sort.
 
 ```
-def build_csr ( src, dst, n_nodes ):
-counts = np.bincount(src, minlength=n_nodes).astype(np.int64)
-indptr = np.zeros(n_nodes + 1 , dtype=np.int64)
-np.cumsum(counts, out=indptr[ 1 :])
-order = np.argsort(src, kind= "stable" )
-return indptr, dst[order].astype(np.int32)
+def build_csr(src, dst, n_nodes):
+    counts = np.bincount(src, minlength=n_nodes).astype(np.int64)
+    indptr = np.zeros(n_nodes + 1, dtype=np.int64)
+    np.cumsum(counts, out=indptr[1:])
+    order = np.argsort(src, kind="stable")
+    return indptr, dst[order].astype(np.int32)
 ```
 
 Both directions use that routine. The reverse index reaches **2.3 times more articles than the forward one** , because a paper cites a few dozen works and can be cited by thousands, and without it most of the graph is unreachable.
@@ -500,36 +506,36 @@ Citation degree over 39,994,988 articles, on log axes (Created by Fareed Khan )
 Every array opens memory-mapped, so construction is milliseconds and the page cache decides what stays resident.
 
 ```
-class KGStore :
-def __init__ ( self, path=GRAPH_DIR ):
-t0 = time.time()
-L = lambda n: np.load( f" {path} / {n} .npy" , mmap_mode= "r" ) # noqa: E731
-self .pmids = L( "pmids" )
-self .cite_indptr, self .cite_indices = L( "cite_indptr" ), L( "cite_indices" )
-self .cb_indptr, self .cb_indices = L( "cited_by_indptr" ), L( "cited_by_indices" )
-self .m2a_indptr, self .m2a_indices = L( "mesh2art_indptr" ), L( "mesh2art_indices" )
-self .N, self .D = len ( self .pmids), len ( self .mesh_uis)
-self .load_secs = time.time() - t0
+class KGStore:
+    def __init__(self, path=GRAPH_DIR):
+        t0 = time.time()
+        L = lambda n: np.load(f"{path}/{n}.npy", mmap_mode="r")  # noqa: E731
+        self.pmids = L("pmids")
+        self.cite_indptr, self.cite_indices = L("cite_indptr"), L("cite_indices")
+        self.cb_indptr, self.cb_indices = L("cited_by_indptr"), L("cited_by_indices")
+        self.m2a_indptr, self.m2a_indices = L("mesh2art_indptr"), L("mesh2art_indices")
+        self.N, self.D = len(self.pmids), len(self.mesh_uis)
+        self.load_secs = time.time() - t0
 
-def cites ( self, i ):
-return self .cite_indices[ self .cite_indptr[i]: self .cite_indptr[i + 1 ]]
+    def cites(self, i):
+        return self.cite_indices[self.cite_indptr[i]:self.cite_indptr[i + 1]]
 
-def cited_by ( self, i ):
-return self .cb_indices[ self .cb_indptr[i]: self .cb_indptr[i + 1 ]]
+    def cited_by(self, i):
+        return self.cb_indices[self.cb_indptr[i]:self.cb_indptr[i + 1]]
 
-def articles_of ( self, d ):
-return np.asarray( self .m2a_indices[ self .m2a_indptr[d]: self .m2a_indptr[d + 1 ]])
+    def articles_of(self, d):
+        return np.asarray(self.m2a_indices[self.m2a_indptr[d]:self.m2a_indptr[d + 1]])
 ```
 
 ```
 #### OUTPUT ####
-load wall clock   2.9 ms
-nodes             39,994,988
-descriptors       31,110
-citation edges    397,731,791
-mesh edges        342,733,118
-retracted         28,806
-quotable          28,336,648  (70.9%)
+  load wall clock   2.9 ms
+  nodes             39,994,988
+  descriptors       31,110
+  citation edges    397,731,791
+  mesh edges        342,733,118
+  retracted         28,806
+  quotable          28,336,648  (70.9%)
 ```
 
 **The entire graph is live in 2.9 milliseconds** , because nothing is read until it is touched. The traversable graph is 397,731,791 plus 342,733,118, which is 740,464,909 edges.
@@ -545,19 +551,19 @@ One index, one range, one slice of neighbours (Created by Fareed Khan )
 Now the latency claim, measured.
 
 ```
-probe = np.random.default_rng( 0 ).integers( 0 , S.N, 20000 )
+probe = np.random.default_rng(0).integers(0, S.N, 20000)
 _t = time.time()
-touched = sum ( len (S.cites( int (i))) + len (S.cited_by( int (i))) for i in probe)
+touched = sum(len(S.cites(int(i))) + len(S.cited_by(int(i))) for i in probe)
 _dt = time.time() - _t
-print ( f"  20,000 node expansions in {_dt* 1000 : .0 f} ms" )
-print ( f"  -> {_dt/ 20000 * 1e6 : .1 f} us per node, {touched:,} neighbours touched" )
+print(f"  20,000 node expansions in {_dt*1000:.0f} ms")
+print(f"  -> {_dt/20000*1e6:.1f} us per node, {touched:,} neighbours touched")
 ```
 
 ```
 #### OUTPUT ####
-20,000 node expansions in 152 ms
--> 7.6 us per node, 396,866 neighbours touched
-a Neo4j round trip is ~1-5 ms: this is ~1000x faster, in-process
+  20,000 node expansions in 152 ms
+  -> 7.6 us per node, 396,866 neighbours touched
+  a Neo4j round trip is ~1-5 ms: this is ~1000x faster, in-process
 ```
 
 **Twenty thousand expansions in 152 milliseconds, which is 7.6 microseconds each.** A database round trip is one to five milliseconds, so this is three orders of magnitude faster and in-process.
@@ -569,17 +575,17 @@ My first MeSH build pulled `descriptor_ui` , a string, for all 396,187,851 rows 
 The fix keeps the mapping in the database.
 
 ```
-con.execute( f"""
-CREATE OR REPLACE TABLE dlut AS
-SELECT ui, CAST(row_number() OVER (ORDER BY ui) - 1 AS INTEGER) AS didx
-FROM read_parquet(' {PQ_DIR} /mesh_descriptors/*.parquet')
-""" )
-con.execute( f"""
-CREATE OR REPLACE TABLE me AS
-SELECT DISTINCT m.pmid AS pmid, d.didx AS didx, m.major_topic AS major
-FROM read_parquet(' {PQ_DIR} /mesh_edges/*.parquet') m
-JOIN dlut d ON m.descriptor_ui = d.ui
-""" )
+con.execute(f"""
+    CREATE OR REPLACE TABLE dlut AS
+    SELECT ui, CAST(row_number() OVER (ORDER BY ui) - 1 AS INTEGER) AS didx
+    FROM read_parquet('{PQ_DIR}/mesh_descriptors/*.parquet')
+""")
+con.execute(f"""
+    CREATE OR REPLACE TABLE me AS
+    SELECT DISTINCT m.pmid AS pmid, d.didx AS didx, m.major_topic AS major
+    FROM read_parquet('{PQ_DIR}/mesh_edges/*.parquet') m
+    JOIN dlut d ON m.descriptor_ui = d.ui
+""")
 ```
 
 Joining to a 31,110-row lookup inside the database and fetching integers only turns an intractable step into a fast one. **Keep set-oriented work in the set-oriented engine, and hand numpy integers.**
@@ -604,11 +610,11 @@ The rebuild derives both arrays from one sorted frame and asserts it.
 
 ```
 cnt = np.bincount(dst, minlength=D).astype(np.int64)
-d_indptr = np.zeros(D + 1 , dtype=np.int64)
-np.cumsum(cnt, out=d_indptr[ 1 :])
+d_indptr = np.zeros(D + 1, dtype=np.int64)
+np.cumsum(cnt, out=d_indptr[1:])
 o = np.lexsort((src, dst))
 d_indices, d_major = src[o].astype(np.int32), maj[o]
-assert len (d_indices) == len (d_major) == d_indptr[- 1 ], "mesh2art misaligned"
+assert len(d_indices) == len(d_major) == d_indptr[-1], "mesh2art misaligned"
 ```
 
 Press enter or click to view image in full size
@@ -622,20 +628,20 @@ The `lexsort` does double duty. It aligns the flags, and because the secondary k
 An assert only proves the arrays agree with each other, so the rebuild also recounts against the database.
 
 ```
-pi = int (np.searchsorted(uis, "D001241" )) # Aspirin
-csr_n = int (d_indptr[pi + 1 ] - d_indptr[pi])
-csr_maj = int (d_major[d_indptr[pi]:d_indptr[pi + 1 ]]. sum ())
-db_n = con.execute( """
-SELECT count(*) FROM edge e JOIN dlut d ON e.didx = d.didx WHERE d.ui = 'D001241'
-""" ).fetchone()[ 0 ]
+pi = int(np.searchsorted(uis, "D001241"))              # Aspirin
+csr_n = int(d_indptr[pi + 1] - d_indptr[pi])
+csr_maj = int(d_major[d_indptr[pi]:d_indptr[pi + 1]].sum())
+db_n = con.execute("""
+    SELECT count(*) FROM edge e JOIN dlut d ON e.didx = d.didx WHERE d.ui = 'D001241'
+""").fetchone()[0]
 assert csr_n == db_n and csr_maj == db_maj, "CSR disagrees with the database"
 ```
 
 ```
 #### OUTPUT ####
-ALIGNMENT ASSERTS PASSED
-Aspirin (D001241): CSR 50,506 articles (27,002 major-topic)
-DB  50,506 articles   match=True
+  ALIGNMENT ASSERTS PASSED
+  Aspirin (D001241): CSR 50,506 articles (27,002 major-topic)
+                     DB  50,506 articles   match=True
 ```
 
 **Fifty thousand five hundred and six articles on both sides, and 27,002 of them major topic.** That is the check I now want on every derived structure: an internal invariant plus an independent recount from the source.
@@ -659,14 +665,14 @@ Four versions and a new metric got it there. Version one covered **51.0%** of re
 Three fixes, each aimed at a measured bucket. MeSH is US English and much medical writing is not.
 
 ```
-ORTHO = [( r"oesophag" , "esophag" ), ( r"paediatr" , "pediatr" ), ( r"anaesthe" , "anesthe" ),
-( r"coeliac" , "celiac" ), ( r"tumour" , "tumor" )] # 27 rules in all
+ORTHO = [(r"oesophag", "esophag"), (r"paediatr", "pediatr"), (r"anaesthe", "anesthe"),
+         (r"coeliac", "celiac"), (r"tumour", "tumor")]    # 27 rules in all
 
-def normalise ( s ):
-s = re.sub( r"[^a-z0-9 ]+" , " " , unicodedata.normalize( "NFKD" , s.lower()))
-for a, b in ORTHO:
-s = re.sub(a, b, s)
-return " " .join(s.split())
+def normalise(s):
+    s = re.sub(r"[^a-z0-9 ]+", " ", unicodedata.normalize("NFKD", s.lower()))
+    for a, b in ORTHO:
+        s = re.sub(a, b, s)
+    return " ".join(s.split())
 ```
 
 The second fix is de-inversion, because MeSH holds Circumcision, Male rather than male circumcision and natural phrasing misses.
@@ -684,30 +690,30 @@ Coverage went to **81.0%** and I nearly shipped it, but coverage only asks wheth
 What I want is precision against the gold article's own MeSH headings, already in my graph. **That is ground truth I did not author.**
 
 ```
-def score ( g, label ):
-tp = fp = fn = 0
-for q, gold, gold_b in items:
-got = {S.mesh_idx(ui) for ui, _, _ in g.ground(q) if role_of(S, ui)[ 1 ] == BRIDGE}
-tp, fp, fn = tp + len (got & gold), fp + len (got - gold), fn + len (gold_b - got)
-return dict (precision=tp / (tp + fp), recall=tp / (tp + fn), label=label)
+def score(g, label):
+    tp = fp = fn = 0
+    for q, gold, gold_b in items:
+        got = {S.mesh_idx(ui) for ui, _, _ in g.ground(q) if role_of(S, ui)[1] == BRIDGE}
+        tp, fp, fn = tp + len(got & gold), fp + len(got - gold), fn + len(gold_b - got)
+    return dict(precision=tp / (tp + fp), recall=tp / (tp + fn), label=label)
 ```
 
 ```
 #### OUTPUT ####
-variant                 precision   recall      F1      FP
---------------------------------------------------------------
-v3 (orthography+deinv)      0.610    0.176   0.273     260
-v4 -scr - head 0.610    0.176   0.273     260
-v4 + head 0.535    0.180   0.269     361
-v4 +scr                     0.607    0.175   0.272     262
-v4 full                     0.534    0.180   0.269     363
+  variant                 precision   recall      F1      FP
+  --------------------------------------------------------------
+  v3 (orthography+deinv)      0.610    0.176   0.273     260
+  v4 -scr -head               0.610    0.176   0.273     260
+  v4 +head                    0.535    0.180   0.269     361
+  v4 +scr                     0.607    0.175   0.272     262
+  v4 full                     0.534    0.180   0.269     363
 
-WORST SPURIOUS MATCHES (grounded, but absent from the gold article)
-34x 'decrease' -> Population Dynamics
-29x 'results' -> Reproducibility of Results
-21x 'waiting' -> Watchful Waiting
-18x 'affect' -> Affect
-14x 'influence' -> Peer Influence
+  WORST SPURIOUS MATCHES (grounded, but absent from the gold article)
+    34x  'decrease'                 -> Population Dynamics
+    29x  'results'                  -> Reproducibility of Results
+    21x  'waiting'                  -> Watchful Waiting
+    18x  'affect'                   -> Affect
+    14x  'influence'                -> Peer Influence
 ```
 
 **Head-noun matching bought seven coverage points and cost 0.075 of precision, adding 103 false positives.** The word decrease became Population Dynamics, a grammatical accident rather than a concept, so the feature was rejected.
@@ -723,35 +729,35 @@ The final version adds one guard: a single-word match must not be ordinary Engli
 **Every word in the blocked set was observed producing a false positive in the precision run.** The grounder below is built once and used everywhere downstream.
 
 ```
-class Grounder :
-def __init__ ( self, terms, names ):
-self .name, self .term2ui = names, {}
-for ui, t in terms: # descriptors, de-inverted forms, SCR aliases
-n = normalise(t)
-if len (n) >= 4 : # SCR aliases under 8: 'pediatric' -> Sulfisoxazole
-self .term2ui.setdefault(n, ui)
-self .max_words = max ( len (x.split()) for x in self .term2ui)
+class Grounder:
+    def __init__(self, terms, names):
+        self.name, self.term2ui = names, {}
+        for ui, t in terms:        # descriptors, de-inverted forms, SCR aliases
+            n = normalise(t)
+            if len(n) >= 4:        # SCR aliases under 8: 'pediatric' -> Sulfisoxazole
+                self.term2ui.setdefault(n, ui)
+        self.max_words = max(len(x.split()) for x in self.term2ui)
 
-def ground ( self, question ):
-q = normalise(question).split()
-out, used = [], [ False ] * len (q)
-for n in range ( min ( self .max_words, len (q)), 0 , - 1 ): # longest span first
-for i in range ( len (q) - n + 1 ):
-surf = " " .join(q[i:i + n])
-ui = self .term2ui.get(surf)
-if ui and not any (used[i:i + n]) and ( " " in surf or surf not in COMMON_SINGLE):
-out.append((ui, self .name[ui], surf))
-used[i:i + n] = [ True ] * n
-return out
+    def ground(self, question):
+        q = normalise(question).split()
+        out, used = [], [False] * len(q)
+        for n in range(min(self.max_words, len(q)), 0, -1):     # longest span first
+            for i in range(len(q) - n + 1):
+                surf = " ".join(q[i:i + n])
+                ui = self.term2ui.get(surf)
+                if ui and not any(used[i:i + n]) and (" " in surf or surf not in COMMON_SINGLE):
+                    out.append((ui, self.name[ui], surf))
+                    used[i:i + n] = [True] * n
+        return out
 ```
 
 ```
 #### OUTPUT ####
-surface forms indexed : 914,356
-de-inverted forms     : 97,093
-supplementary aliases : 664,659
-common-word guard     : 109 single words blocked
-longest entry term    : 64 words
+  surface forms indexed : 914,356
+  de-inverted forms     : 97,093
+  supplementary aliases : 664,659
+  common-word guard     : 109 single words blocked
+  longest entry term    : 64 words
 ```
 
 **914,356 surface forms, of which 664,659 came from supplementary concepts and 97,093 from de-inverting MeSH's own preferred terms.** The longest entry term runs sixty four words.
@@ -759,19 +765,19 @@ longest entry term    : 64 words
 Let us check the orthography fix.
 
 ```
-for probe in [ "barrett's oesophagus" , "tumour necrosis factor" , "paediatric anaesthesia" ,
-"coeliac disease" , "male circumcision" ]:
-ui = GR.term2ui.get(normalise(probe))
-print ( f" {probe:< 26 } -> {GR.name.get(ui, 'MISS' )} " )
+for probe in ["barrett's oesophagus", "tumour necrosis factor", "paediatric anaesthesia",
+              "coeliac disease", "male circumcision"]:
+    ui = GR.term2ui.get(normalise(probe))
+    print(f"  {probe:<26} -> {GR.name.get(ui, 'MISS')}")
 ```
 
 ```
 #### OUTPUT ####
-barrett 's oesophagus       -> Barrett Esophagus
-tumour necrosis factor     -> Tumor Necrosis Factor-alpha
-paediatric anaesthesia     -> Pediatric Anesthesia
-coeliac disease            -> Celiac Disease
-male circumcision          -> Circumcision, Male
+  barrett's oesophagus       -> Barrett Esophagus
+  tumour necrosis factor     -> Tumor Necrosis Factor-alpha
+  paediatric anaesthesia     -> Pediatric Anesthesia
+  coeliac disease            -> Celiac Disease
+  male circumcision          -> Circumcision, Male
 ```
 
 **All five resolve, and each was a miss before.** The last is de-inversion, and the first four are twenty seven substitution rules earning their keep.
@@ -793,32 +799,32 @@ The bridge predicate, which is the only place specificity is required (Created b
 ![Image](structuring-docs-knowledge-graph_artifacts/image_000019_121a9628b3b3a1aa1bf6d58d7959665927e38ffae0814317ec2afbd44b4d036c.png)
 
 ```
-BRIDGE, FILTER, IGNORE = "BRIDGE" , "FILTER" , "IGNORE"
+BRIDGE, FILTER, IGNORE = "BRIDGE", "FILTER", "IGNORE"
 
-def role_of ( store, ui ):
-d = store.mesh_idx(ui)
-if d < 0 :
-return - 1 , IGNORE
-cnt, cat, dep = int (store.mesh_count[d]), str (store.mesh_cat[d]), int (store.mesh_min_depth[d])
-if cat == "M" or cnt > CHECK_TAG_MAX: # Humans, Male, Adult, Animals...
-return d, IGNORE
-if cat in "ABCDEFGKNJ" and dep >= 3 and cnt <= 500_000 :
-return d, BRIDGE
-return d, FILTER
+def role_of(store, ui):
+    d = store.mesh_idx(ui)
+    if d < 0:
+        return -1, IGNORE
+    cnt, cat, dep = int(store.mesh_count[d]), str(store.mesh_cat[d]), int(store.mesh_min_depth[d])
+    if cat == "M" or cnt > CHECK_TAG_MAX:       # Humans, Male, Adult, Animals...
+        return d, IGNORE
+    if cat in "ABCDEFGKNJ" and dep >= 3 and cnt <= 500_000:
+        return d, BRIDGE
+    return d, FILTER
 ```
 
 ```
 demo_q = "Is cytokeratin immunoreactivity useful in the diagnosis of Barrett's oesophagus?"
-print ( f"  Q: {demo_q} " )
+print(f"  Q: {demo_q}")
 for ui, nm, surface in GR.ground(demo_q):
-print ( f" {role_of(S, ui)[ 1 ]:< 7 } {ui:< 11 } {nm:< 30 } <- {surface!r} " )
+    print(f"      {role_of(S, ui)[1]:<7} {ui:<11} {nm:<30} <- {surface!r}")
 ```
 
 ```
 #### OUTPUT ####
-Q: Is cytokeratin immunoreactivity useful in the diagnosis of Barrett 's oesophagus?
-BRIDGE  D001471     Barrett Esophagus              <- ' barrett s esophagus '
-BRIDGE  D007633     Keratins                       <- ' cytokeratin '
+  Q: Is cytokeratin immunoreactivity useful in the diagnosis of Barrett's oesophagus?
+      BRIDGE  D001471     Barrett Esophagus              <- 'barrett s esophagus'
+      BRIDGE  D007633     Keratins                       <- 'cytokeratin'
 ```
 
 **Two bridge concepts from a question in British English using a synonym for the descriptor name.** Cytokeratin is not the MeSH term, Keratins is.
@@ -827,13 +833,13 @@ The check tags are excluded for a concrete reason.
 
 ```
 #### OUTPUT ####
-most-used descriptors (all rejected as bridges):
-D006801 cat =B   23,222,680 articles
-D005260 cat =?   10,510,179 articles
-D008297 cat =?   10,193,344 articles
-D000818 cat =B    7,824,137 articles
-D000328 cat =M    5,952,240 articles
-D008875 cat =M    5,196,713 articles
+  most-used descriptors (all rejected as bridges):
+      D006801    cat=B   23,222,680 articles
+      D005260    cat=?   10,510,179 articles
+      D008297    cat=?   10,193,344 articles
+      D000818    cat=B    7,824,137 articles
+      D000328    cat=M    5,952,240 articles
+      D008875    cat=M    5,196,713 articles
 ```
 
 **D006801 is Humans, and it annotates 23,222,680 articles.** Traversing it would connect twenty three million papers and call that evidence. The article-count rule excludes it, not the category rule, because Humans shares category B with every organism.
@@ -856,19 +862,19 @@ Seeding from one concept and walking outward returns aspirin papers, not aspirin
 
 ```
 @dataclass
-class EvidencePath :
-kind: str
-hops: list
-concepts: tuple
-terminal_pmid: int
-quotable: bool
-retracted: bool
-eoc: bool
-year: int
+class EvidencePath:
+    kind: str
+    hops: list
+    concepts: tuple
+    terminal_pmid: int
+    quotable: bool
+    retracted: bool
+    eoc: bool
+    year: int
 
-def render ( self ):
-chain = " " .join(h.render() for h in self .hops) or f"PMID {self.terminal_pmid} "
-return f" {self.kind:< 6 } [ { ' + ' .join(self.concepts)} ] {chain} ( {self.year} )"
+    def render(self):
+        chain = " ".join(h.render() for h in self.hops) or f"PMID {self.terminal_pmid}"
+        return f"{self.kind:<6} [{' + '.join(self.concepts)}] {chain} ({self.year})"
 ```
 
 A DIRECT path is one article carrying both descriptors as major topics, zero hops and strongest because NLM asserted both. A BRIDGE path is one hop, an article on concept one citing one on concept two.
@@ -882,59 +888,59 @@ Pair selection is a set intersection, not a rule (Created by Fareed Khan )
 ![Image](structuring-docs-knowledge-graph_artifacts/image_000022_1cb91ed35e6cb0a69a2c6194f345fee23c9c3a84f8cade0923c6723a24a5f1a8.png)
 
 ```
-class ConceptLinker :
-def score_pairs ( self, cons, verbose= False ):
-"""Let the GRAPH choose which concepts belong together."""
-scored = []
-for (d1, _, n1, _), (d2, _, n2, _) in itertools.combinations(cons, 2 ):
-both = np.intersect1d( self .s.articles_of(d1, major_only= True ),
-self .s.articles_of(d2, major_only= True ), True )
-scored.append(( len (both), d1, d2, n1, n2, both))
-scored.sort(key= lambda r: -r[ 0 ])
-if verbose:
-for n, _, _, n1, n2, _ in scored[: 4 ]:
-print ( f"      pair {n1!r} + {n2!r} : {n:,} co-annotated" )
-return scored
+class ConceptLinker:
+    def score_pairs(self, cons, verbose=False):
+        """Let the GRAPH choose which concepts belong together."""
+        scored = []
+        for (d1, _, n1, _), (d2, _, n2, _) in itertools.combinations(cons, 2):
+            both = np.intersect1d(self.s.articles_of(d1, major_only=True),
+                                  self.s.articles_of(d2, major_only=True), True)
+            scored.append((len(both), d1, d2, n1, n2, both))
+        scored.sort(key=lambda r: -r[0])
+        if verbose:
+            for n, _, _, n1, n2, _ in scored[:4]:
+                print(f"      pair {n1!r} + {n2!r}: {n:,} co-annotated")
+        return scored
 
-def link ( self, groundings, verbose= False ):
-cons = self .bridges(groundings)
-scored = self .score_pairs(cons, verbose)
-_, d1, d2, n1, n2, both = scored[ 0 ]
-return self ._direct(both, n1, n2) + self ._bridge(d1, d2, n1, n2), cons, scored
+    def link(self, groundings, verbose=False):
+        cons = self.bridges(groundings)
+        scored = self.score_pairs(cons, verbose)
+        _, d1, d2, n1, n2, both = scored[0]
+        return self._direct(both, n1, n2) + self._bridge(d1, d2, n1, n2), cons, scored
 ```
 
 The bridge enumeration uses the ascending order the rebuild guaranteed, so membership is a binary search.
 
 ```
-def _bridge ( self, d1, d2, n1, n2 ):
-s, out = self .s, []
-A = s.articles_of(d1, major_only= True )[- self .max_seed:]
-B = s.articles_of(d2, major_only= True )
-for a in map ( int , A):
-for nbrs, kind in ((s.cites(a), "CITES" ), (s.cited_by(a), "CITED_BY" )):
-nb = np.asarray(nbrs)
-k = np.searchsorted(B, nb).clip( 0 , len (B) - 1 )
-for h in map ( int , nb[B[k] == nb][: 4 ]):
-out.append( self ._mk( "BRIDGE" , [Hop(s.pmid(a), s.pmid(h), kind)], n1, n2, h))
-return out[: self .max_paths]
+def _bridge(self, d1, d2, n1, n2):
+    s, out = self.s, []
+    A = s.articles_of(d1, major_only=True)[-self.max_seed:]
+    B = s.articles_of(d2, major_only=True)
+    for a in map(int, A):
+        for nbrs, kind in ((s.cites(a), "CITES"), (s.cited_by(a), "CITED_BY")):
+            nb = np.asarray(nbrs)
+            k = np.searchsorted(B, nb).clip(0, len(B) - 1)
+            for h in map(int, nb[B[k] == nb][:4]):
+                out.append(self._mk("BRIDGE", [Hop(s.pmid(a), s.pmid(h), kind)], n1, n2, h))
+    return out[:self.max_paths]
 ```
 
 ```
 q = "Does aspirin reduce the risk of myocardial infarction?"
-print ( f"  Q: {q} " )
-paths, cons, scored = CL.link(GR.ground(q), verbose= True )
-n, _, _, n1, n2, _ = scored[ 0 ]
-print ( f"  CHOSEN: {n1!r} <-> {n2!r} ( {n:,} co-annotated articles)" )
+print(f"  Q: {q}")
+paths, cons, scored = CL.link(GR.ground(q), verbose=True)
+n, _, _, n1, n2, _ = scored[0]
+print(f"  CHOSEN: {n1!r} <-> {n2!r}  ({n:,} co-annotated articles)")
 kinds = Counter(p.kind for p in paths)
-print ( f"  paths: { len (paths)} (DIRECT= {kinds[ 'DIRECT' ]} , BRIDGE= {kinds[ 'BRIDGE' ]} )" )
+print(f"  paths: {len(paths)}  (DIRECT={kinds['DIRECT']}, BRIDGE={kinds['BRIDGE']})")
 ```
 
 ```
 #### OUTPUT ####
-Q: Does aspirin reduce the risk of myocardial infarction?
-pair 'Aspirin' + 'Myocardial Infarction' : 1,132 co-annotated
-CHOSEN: 'Aspirin' <-> 'Myocardial Infarction' (1,132 co-annotated articles)
-paths: 400  (DIRECT=200, BRIDGE=200)
+  Q: Does aspirin reduce the risk of myocardial infarction?
+      pair 'Aspirin' + 'Myocardial Infarction': 1,132 co-annotated
+  CHOSEN: 'Aspirin' <-> 'Myocardial Infarction'  (1,132 co-annotated articles)
+  paths: 400  (DIRECT=200, BRIDGE=200)
 ```
 
 **Aspirin and Myocardial Infarction, connected by 1,132 articles carrying both as major topics.** The word risk passes the specificity filter but co-annotates with almost nothing, so the graph never picks it.
@@ -948,18 +954,18 @@ Two ways to connect two concepts, and both carry their provenance (Created by Fa
 Now the evidence, with its justifying path.
 
 ```
-for p in sorted ([p for p in paths if p.quotable and not p.retracted],
-key= lambda p: -p.year)[: 5 ]:
-print ( f" {p.render()} " )
+for p in sorted([p for p in paths if p.quotable and not p.retracted],
+                key=lambda p: -p.year)[:5]:
+    print(f"  {p.render()}")
 ```
 
 ```
 #### OUTPUT ####
-BRIDGE [Aspirin + Myocardial Infarction] 39308168 <--cited-by-- 41584723 (2026)
-DIRECT [Aspirin + Myocardial Infarction] PMID 41325611 (2025)
-DIRECT [Aspirin + Myocardial Infarction] PMID 41185427 (2025)
-DIRECT [Aspirin + Myocardial Infarction] PMID 40888726 (2025)
-DIRECT [Aspirin + Myocardial Infarction] PMID 40119267 (2025)
+  BRIDGE [Aspirin + Myocardial Infarction] 39308168 <--cited-by-- 41584723 (2026)
+  DIRECT [Aspirin + Myocardial Infarction] PMID 41325611 (2025)
+  DIRECT [Aspirin + Myocardial Infarction] PMID 41185427 (2025)
+  DIRECT [Aspirin + Myocardial Infarction] PMID 40888726 (2025)
+  DIRECT [Aspirin + Myocardial Infarction] PMID 40119267 (2025)
 ```
 
 Five lines came back, and each is a defensible claim. Article 39308168 is about aspirin, article 41584723 cites it, and that one is about myocardial infarction with a quotable abstract.
@@ -975,29 +981,29 @@ The gates are a conjunction, and every term is a numpy predicate (Created by Far
 ![Image](structuring-docs-knowledge-graph_artifacts/image_000024_c0dc62af96380b841dbacef71cd11c5c570de50b1d4024e7f8714a000c24a4f5.png)
 
 ```
-class RefusalLadder :
-def evaluate ( self, groundings, concepts, paths ):
-if not groundings:
-return Verdict( False , "no_mesh_entry_point" ,
-detail= "nothing in the question resolves to a descriptor" )
-if len (concepts) < 2 :
-return Verdict( False , "too_few_specific_concepts" )
-if not paths:
-return Verdict( False , "no_path" )
-u = [p for p in paths if p.quotable]
-if not u:
-return Verdict( False , "no_quotable_terminal" , len (paths))
-u = [p for p in u if not p.retracted and not p.eoc]
-if not u:
-return Verdict( False , "only_retracted_evidence" , len (paths))
-if self .as_of:
-u = [p for p in u if 0 < p.year <= self .as_of]
-if not u:
-return Verdict( False , "no_evidence_as_of_date" , len (paths), 0 ,
-f"no supporting evidence existed on or before {self.as_of} " )
-if len (u) < self .min_paths:
-return Verdict( False , "insufficient_paths" , len (paths), len (u))
-return Verdict( True , "grounded" , len (paths), len (u))
+class RefusalLadder:
+    def evaluate(self, groundings, concepts, paths):
+        if not groundings:
+            return Verdict(False, "no_mesh_entry_point",
+                           detail="nothing in the question resolves to a descriptor")
+        if len(concepts) < 2:
+            return Verdict(False, "too_few_specific_concepts")
+        if not paths:
+            return Verdict(False, "no_path")
+        u = [p for p in paths if p.quotable]
+        if not u:
+            return Verdict(False, "no_quotable_terminal", len(paths))
+        u = [p for p in u if not p.retracted and not p.eoc]
+        if not u:
+            return Verdict(False, "only_retracted_evidence", len(paths))
+        if self.as_of:
+            u = [p for p in u if 0 < p.year <= self.as_of]
+            if not u:
+                return Verdict(False, "no_evidence_as_of_date", len(paths), 0,
+                               f"no supporting evidence existed on or before {self.as_of}")
+        if len(u) < self.min_paths:
+            return Verdict(False, "insufficient_paths", len(paths), len(u))
+        return Verdict(True, "grounded", len(paths), len(u))
 ```
 
 Gate four is not hypothetical. The graph spans forty million nodes and only 28.3 million are quotable, so the system can traverse a node it may not cite.
@@ -1006,28 +1012,28 @@ A helper grounds each question, evaluates the ladder, and prints the verdict. I 
 
 ```
 #### OUTPUT ####
-[ANSWER ] 'Does aspirin reduce the risk of myocardial infarction?'
-reason=grounded  paths=400  usable=323
-BRIDGE [Aspirin + Myocardial Infarction] 39308168 <--cited-by-- 41584723 (2026)
-DIRECT [Aspirin + Myocardial Infarction] PMID 41325611 (2025)
+  [ANSWER ] 'Does aspirin reduce the risk of myocardial infarction?'
+            reason=grounded  paths=400  usable=323
+            BRIDGE [Aspirin + Myocardial Infarction] 39308168 <--cited-by-- 41584723 (2026)
+            DIRECT [Aspirin + Myocardial Infarction] PMID 41325611 (2025)
 
-[ANSWER ] 'What is the role of metformin in type 2 diabetes mellitus?'
-reason=grounded  paths=400  usable=389
-DIRECT [Metformin + Diabetes Mellitus, Type 2] PMID 41566384 (2026)
+  [ANSWER ] 'What is the role of metformin in type 2 diabetes mellitus?'
+            reason=grounded  paths=400  usable=389
+            DIRECT [Metformin + Diabetes Mellitus, Type 2] PMID 41566384 (2026)
 
-[ANSWER ] 'Is hydroxychloroquine effective against COVID-19?'
-reason=grounded  paths=362  usable=304
-DIRECT [Hydroxychloroquine + COVID-19] PMID 40988009 (2025)
+  [ANSWER ] 'Is hydroxychloroquine effective against COVID-19?'
+            reason=grounded  paths=362  usable=304
+            DIRECT [Hydroxychloroquine + COVID-19] PMID 40988009 (2025)
 
-[REFUSE ] 'Wingardium leviosa quidditch broomstick aerodynamics'
-reason=no_mesh_entry_point  paths=0  usable=0
-nothing in the question resolves to a descriptor
--> the generator is never called.
+  [REFUSE ] 'Wingardium leviosa quidditch broomstick aerodynamics'
+            reason=no_mesh_entry_point  paths=0  usable=0
+            nothing in the question resolves to a descriptor
+            -> the generator is never called.
 
-[REFUSE ] 'Is hydroxychloroquine effective against COVID-19?' [as-of 2015]
-reason=no_evidence_as_of_date  paths=362  usable=0
-no supporting evidence existed on or before 2015
--> the generator is never called.
+  [REFUSE ] 'Is hydroxychloroquine effective against COVID-19?'  [as-of 2015]
+            reason=no_evidence_as_of_date  paths=362  usable=0
+            no supporting evidence existed on or before 2015
+            -> the generator is never called.
 ```
 
 Two of the five refused. **A question naming nothing in the ontology is refused at gate one, before any generation happens.** Asking a 2020 question as of 2015 finds 362 paths and keeps zero, because the evidence did not exist yet.
@@ -1045,19 +1051,19 @@ Anything untraceable is refused is a **causal** claim, so deleting the evidence 
 I made it a dose-response curve, because deleting one paper from forty million almost never removes the answer.
 
 ```
-class AblatableLinker ( ConceptLinker ):
-def __init__ ( self, store, excluded: set , **kw ):
-super ().__init__(store, **kw)
-self .excluded = excluded
+class AblatableLinker(ConceptLinker):
+    def __init__(self, store, excluded: set, **kw):
+        super().__init__(store, **kw)
+        self.excluded = excluded
 
-def direct_from ( self, both, n1, n2 ):
-both = np.array([b for b in both if int (b) not in self .excluded],
-dtype=np.int64)
-return super ().direct_from(both, n1, n2)
+    def direct_from(self, both, n1, n2):
+        both = np.array([b for b in both if int(b) not in self.excluded],
+                        dtype=np.int64)
+        return super().direct_from(both, n1, n2)
 
-def bridge ( self, d1, d2, n1, n2 ):
-return [p for p in super ().bridge(d1, d2, n1, n2)
-if self .s.idx(p.terminal_pmid) not in self .excluded]
+    def bridge(self, d1, d2, n1, n2):
+        return [p for p in super().bridge(d1, d2, n1, n2)
+                if self.s.idx(p.terminal_pmid) not in self.excluded]
 ```
 
 The tiers are cumulative. T1 excludes the gold document, T2 adds every directly co-annotated article, T3 adds every bridge terminal.
@@ -1066,17 +1072,17 @@ A trustworthy system is monotonic, low at T0 and high at T3. Both ends must be r
 
 ```
 #### OUTPUT ####
-n = 53 PubMedQA questions (seed 42)
+  n = 53 PubMedQA questions (seed 42)
 
-tier                                           refusal
-------------------------------------------------------
-T0  full graph                                    7.5% ###
-T1  gold document removed                         7.5% ###
-T2  + direct co-annotated evidence removed       20.8% ########
-T3  + bridge terminals removed                  100.0% ########################################
+  tier                                           refusal
+  ------------------------------------------------------
+  T0  full graph                                    7.5%  ###
+  T1  gold document removed                         7.5%  ###
+  T2  + direct co-annotated evidence removed       20.8%  ########
+  T3  + bridge terminals removed                  100.0%  ########################################
 
-monotonic increase : True
-causal effect T3-T0: +92.5 points
+  monotonic increase : True
+  causal effect T3-T0: +92.5 points
 ```
 
 **Seven and a half percent up to one hundred percent, monotonic, a causal effect of 92.5 points.** Two readings inside the curve matter more.
@@ -1109,40 +1115,40 @@ The third version groups forty files into one super-shard, sorts it globally by 
 
 ```
 for grp in groups:
-all_texts, all_pmids, bounds = read_super_shard(grp)
+    all_texts, all_pmids, bounds = read_super_shard(grp)
 
-order = np.argsort([ len (x) for x in all_texts], kind= "stable" )
-inv = np.empty_like(order)
-inv[order] = np.arange( len (order))
+    order = np.argsort([len(x) for x in all_texts], kind="stable")
+    inv = np.empty_like(order)
+    inv[order] = np.arange(len(order))
 
-dl = DataLoader(TextDS([all_texts[i] for i in order]),
-batch_size=args.batch_size, num_workers=args.workers,
-collate_fn=make_collate(tok), pin_memory= True )
+    dl = DataLoader(TextDS([all_texts[i] for i in order]),
+                    batch_size=args.batch_size, num_workers=args.workers,
+                    collate_fn=make_collate(tok), pin_memory=True)
 
-out = np.empty(( len (all_texts), DIM), dtype=np.float16)
-pos = 0
-with torch.no_grad():
-for b in dl:
-b = {k: v.cuda(non_blocking= True ) for k, v in b.items()}
-hid = torch.nn.functional.normalize(
-model(**b).last_hidden_state[:, 0 ]. float (), dim=- 1 )
-out[pos:pos + hid.shape[ 0 ]] = hid.half().cpu().numpy()
-pos += hid.shape[ 0 ]
-out = out[inv]
+    out = np.empty((len(all_texts), DIM), dtype=np.float16)
+    pos = 0
+    with torch.no_grad():
+        for b in dl:
+            b = {k: v.cuda(non_blocking=True) for k, v in b.items()}
+            hid = torch.nn.functional.normalize(
+                model(**b).last_hidden_state[:, 0].float(), dim=-1)
+            out[pos:pos + hid.shape[0]] = hid.half().cpu().numpy()
+            pos += hid.shape[0]
+    out = out[inv]
 ```
 
 ```
 #### OUTPUT ####
-stage                                         txt/s   ETA 28.3M
----------------------------------------------------------------
-v1  naive sentence-transformers loop            620      12.70h
-v2  DataLoader workers + length-sorted        1,319       5.97h
-v3  super-shards (~1M texts/loader)           3,718       2.12h
-raw GPU ceiling @ seq256 bs512           13,396       0.59h
+  stage                                         txt/s   ETA 28.3M
+  ---------------------------------------------------------------
+  v1  naive sentence-transformers loop            620      12.70h
+  v2  DataLoader workers + length-sorted        1,319       5.97h
+  v3  super-shards (~1M texts/loader)           3,718       2.12h
+      raw GPU ceiling @ seq256 bs512           13,396       0.59h
 
-v1  naive sentence-tra   tokenisation cost 1.4x the forward pass and ran serialised with it
-v2  DataLoader workers   10 workers forked PER 13k-row shard; spawn dominated
-v3  super-shards (~1M    workers amortised; length sort over a much larger pool
+  v1  naive sentence-tra   tokenisation cost 1.4x the forward pass and ran serialised with it
+  v2  DataLoader workers   10 workers forked PER 13k-row shard; spawn dominated
+  v3  super-shards (~1M    workers amortised; length sort over a much larger pool
 ```
 
 **Six hundred and twenty texts per second became 3,718, six times faster, and the model never changed.** Against the measured ceiling of 13,396 that is about 28%, and the first version was under 5%. Every point came from feeding the GPU.
@@ -1178,24 +1184,24 @@ Nothing errored. The answers simply got worse, the second time in this project a
 Consolidation is two passes and never holds the index in memory. The first stable-sorts every identifier and asserts uniqueness. The second builds an inverse permutation, streams each shard into its rows of a memory-mapped output, then verifies against the sources.
 
 ```
-rng = np.random.default_rng( 0 )
+rng = np.random.default_rng(0)
 ok = 0
-for _ in range ( 5 ):
-s = int (rng.integers( 0 , len (pmf)))
-pm = np.load(pmf[s], mmap_mode= "r" )
-ev = np.load(emf[s], mmap_mode= "r" )
-j = int (rng.integers( 0 , len (pm)))
-gi = int (np.searchsorted(idx, int (pm[j])))
-ok += idx[gi] == pm[j] and np.allclose(np.asarray(vec[gi]),
-np.asarray(ev[j]))
-assert ok == 5 , "consolidated index does not match its sources"
+for _ in range(5):
+    s = int(rng.integers(0, len(pmf)))
+    pm = np.load(pmf[s], mmap_mode="r")
+    ev = np.load(emf[s], mmap_mode="r")
+    j = int(rng.integers(0, len(pm)))
+    gi = int(np.searchsorted(idx, int(pm[j])))
+    ok += idx[gi] == pm[j] and np.allclose(np.asarray(vec[gi]),
+                                           np.asarray(ev[j]))
+assert ok == 5, "consolidated index does not match its sources"
 ```
 
 ```
 #### OUTPUT ####
-shards embedded  1,334 / 1334
-vectors          28,336,648  x 384d fp16
-index on disk    20.3 GiB
+  shards embedded  1,334 / 1334
+  vectors          28,336,648  x 384d fp16
+  index on disk    20.3 GiB
 ```
 
 **28,336,648 vectors at 384 dimensions in half precision, 20.3 GiB, consolidated in 51.7 seconds.** Lookup is a binary search plus one memory-mapped row read.
@@ -1230,19 +1236,19 @@ Then a short adaptation run, evaluated on a dev split the model never sees.
 
 ```
 #### OUTPUT ####
-A confound we had to fix first:
-v1 fed gold rationale SENTENCES for SUPPORT/CONTRADICT but whole
-ABSTRACTS for NOINFO - a length/specificity leak. At inference we never
-know the rationale, so every class now gets the full abstract.
-zero-shot macro-F1 with leak    : 0.597
-zero-shot macro-F1 leak removed : 0.464
+  A confound we had to fix first:
+    v1 fed gold rationale SENTENCES for SUPPORT/CONTRADICT but whole
+    ABSTRACTS for NOINFO - a length/specificity leak. At inference we never
+    know the rationale, so every class now gets the full abstract.
+    zero-shot macro-F1 with leak    : 0.597
+    zero-shot macro-F1 leak removed : 0.464
 
-zero-shot    adapted    delta
---------------------------------------------------
-macro-F1                 0.464      0.519   +0.055
-NOINFO AUROC             0.722      0.932   +0.211
+                       zero-shot    adapted    delta
+  --------------------------------------------------
+  macro-F1                 0.464      0.519   +0.055
+  NOINFO AUROC             0.722      0.932   +0.211
 
-adaptation: 919 SciFact train pairs, 3 epochs, ~100 s on the H100
+  adaptation: 919 SciFact train pairs, 3 epochs, ~100 s on the H100
 ```
 
 **Removing the leak dropped zero-shot macro-F1 from 0.597 to 0.464** , so a third of my first evaluation was measuring sentence length, not entailment.
@@ -1270,20 +1276,20 @@ MedREQAL questions are interrogative and the verifier was trained on declarative
 
 ```
 #### OUTPUT ####
-n = 350 questions   NEI = 281
+  n = 350 questions   NEI = 281
 
-feature                                        AUROC vs NEI
-------------------------------------------------------------
-gates 1-5: n_paths (fewer => less evidence)           0.555
-gates 1-5: direct co-annotation count                 0.538
-gates 1-5: best-pair co-annotation                    0.533
-gates 1-5: refused (binary)                           0.500
-GATE 6: mean neutrality                               0.469
-GATE 6: min neutrality (best evidence)                0.497
-GATE 6: frac abstracts neutral>0.9                    0.463
+  feature                                        AUROC vs NEI
+  ------------------------------------------------------------
+  gates 1-5: n_paths (fewer => less evidence)           0.555
+  gates 1-5: direct co-annotation count                 0.538
+  gates 1-5: best-pair co-annotation                    0.533
+  gates 1-5: refused (binary)                           0.500
+  GATE 6: mean neutrality                               0.469
+  GATE 6: min neutrality (best evidence)                0.497
+  GATE 6: frac abstracts neutral>0.9                    0.463
 
-H1 (structural ~ chance) : SUPPORTED  (0.555)
-H2 (propositional works) : REJECTED  (0.497)
+  H1 (structural ~ chance) : SUPPORTED  (0.555)
+  H2 (propositional works) : REJECTED  (0.497)
 ```
 
 **H1 held and H2 was rejected.** Gate six scored 0.497 here, which is chance, despite scoring 0.932 on SciFact.
@@ -1298,9 +1304,9 @@ The discriminating test hands the verifier Cochrane's **own conclusion field** ,
 
 ```
 #### OUTPUT ####
-SciFact dev NOINFO AUROC (control re-test)  : 0.932
-MedREQAL via our retrieved abstracts        : 0.497
-MedREQAL via Cochrane 's OWN conclusion text : 0.544
+  SciFact dev NOINFO AUROC (control re-test)  : 0.932
+  MedREQAL via our retrieved abstracts        : 0.497
+  MedREQAL via Cochrane's OWN conclusion text : 0.544
 ```
 
 The verifier is unchanged at **0.932** , which rules out E1. Given the exact text the reviewers judged from, the score moved from 0.497 to 0.544, which rules out E2.
@@ -1334,15 +1340,15 @@ Ranking is a re-ordering, and it can never introduce a document (Created by Fare
 ![Image](structuring-docs-knowledge-graph_artifacts/image_000036_20ed7ad681afe20c2d5237d5bcb192b2246b9f2c892a8d07f172f247b8c6cdb3.png)
 
 ```
-class SemanticRanker :
-def rank ( self, question, paths, top_k= 8 ):
-# per call from a pmid-sorted memmap, never cached
-vecs = self .vectors_for(p.terminal_pmid for p in paths)
-qv = self .embed_query(question)
-scored = [( float (qv @ v) if (v := vecs.get(p.terminal_pmid)) is not None else - 1.0 , p)
-for p in paths]
-scored.sort(key= lambda x: -x[ 0 ])
-return scored[:top_k]
+class SemanticRanker:
+    def rank(self, question, paths, top_k=8):
+        # per call from a pmid-sorted memmap, never cached
+        vecs = self.vectors_for(p.terminal_pmid for p in paths)
+        qv = self.embed_query(question)
+        scored = [(float(qv @ v) if (v := vecs.get(p.terminal_pmid)) is not None else -1.0, p)
+                  for p in paths]
+        scored.sort(key=lambda x: -x[0])
+        return scored[:top_k]
 ```
 
 The prompt is constrained, and abstention is first-class.
@@ -1351,10 +1357,10 @@ The prompt is constrained, and abstention is first-class.
 ABSTAIN = "INSUFFICIENT_EVIDENCE"
 
 SYSTEM = (
-"You answer strictly from the numbered evidence passages provided. Rules:\n"
-"1. Use ONLY facts stated in the passages. Never use outside knowledge.\n"
-f"2. If the passages do not contain the answer, reply with exactly: {ABSTAIN} \n"
-"3. Every sentence MUST end with the PMID(s) it uses, like [12345678]."
+    "You answer strictly from the numbered evidence passages provided. Rules:\n"
+    "1. Use ONLY facts stated in the passages. Never use outside knowledge.\n"
+    f"2. If the passages do not contain the answer, reply with exactly: {ABSTAIN}\n"
+    "3. Every sentence MUST end with the PMID(s) it uses, like [12345678]."
 )
 ```
 
@@ -1363,20 +1369,20 @@ f"2. If the passages do not contain the answer, reply with exactly: {ABSTAIN} \n
 The third silent bug made a safety claim vacuous. My parser matched one identifier per bracket, so **every identifier in a multi-citation bracket bypassed the check** , making my reported zero fabricated citations partly meaningless.
 
 ```
-_CITE_BLOCK = re. compile ( r"\[((?:\d{4,9})(?:\s*,\s*\d{4,9})*)\]" )
+_CITE_BLOCK = re.compile(r"\[((?:\d{4,9})(?:\s*,\s*\d{4,9})*)\]")
 
-def _cited_ids ( text ):
-return [ int (x) for b in _CITE_BLOCK.findall(text)
-for x in re.split( r"\s*,\s*" , b.strip())]
+def _cited_ids(text):
+    return [int(x) for b in _CITE_BLOCK.findall(text)
+            for x in re.split(r"\s*,\s*", b.strip())]
 ```
 
 The fix keeps only identifiers in the path set.
 
 ```
-def _fix ( m ):
-keep = [x for x in re.split( r"\s*,\s*" , m.group( 1 ).strip())
-if int (x) in valid]
-return f"[ { ', ' .join(keep)} ]" if keep else ""
+def _fix(m):
+    keep = [x for x in re.split(r"\s*,\s*", m.group(1).strip())
+            if int(x) in valid]
+    return f"[{', '.join(keep)}]" if keep else ""
 
 clean = _CITE_BLOCK.sub(_fix, raw)
 ```
@@ -1385,12 +1391,12 @@ Demonstrated on a poisoned answer.
 
 ```
 #### OUTPUT ####
-valid PMIDs in path set : [40466424, 41097011]
-model wrote             : Metformin works [40466424, 41097011, 99999999]. Also true [40466424]. Fabricated [12345678].
-after validation        : Metformin works [40466424, 41097011]. Also true [40466424]. Fabricated .
+  valid PMIDs in path set : [40466424, 41097011]
+  model wrote             : Metformin works [40466424, 41097011, 99999999]. Also true [40466424]. Fabricated [12345678].
+  after validation        : Metformin works [40466424, 41097011]. Also true [40466424]. Fabricated .
 
-99999999 removed from inside a multi-citation bracket;
-12345678 's bracket removed entirely. Neither reaches the user.
+  99999999 removed from inside a multi-citation bracket;
+  12345678's bracket removed entirely. Neither reaches the user.
 ```
 
 **The invented identifier is stripped from its bracket, and the fabricated bracket is removed.**
@@ -1412,25 +1418,25 @@ The gate, scored against the best single source rather than a concatenation (Cre
 ![Image](structuring-docs-knowledge-graph_artifacts/image_000038_80cb40330851393e91ea81ab91a92ee4afdb531b9e3d974fefbca7fbc625e50b.png)
 
 ```
-def check ( self, ans, ranked, abstracts ):
-srcs = [a for a in (abstracts.get(p.terminal_pmid, "" ) for _, p in ranked) if a]
-out = []
-for c in self .claims(ans.text):
-n = min (( self .neutrality(c, s) for s in srcs), default= 1.0 )
-out.append(ClaimVerdict(c, n, n < self .tau))
-return out
+def check(self, ans, ranked, abstracts):
+    srcs = [a for a in (abstracts.get(p.terminal_pmid, "") for _, p in ranked) if a]
+    out = []
+    for c in self.claims(ans.text):
+        n = min((self.neutrality(c, s) for s in srcs), default=1.0)
+        out.append(ClaimVerdict(c, n, n < self.tau))
+    return out
 ```
 
 One claim, one evidence set.
 
 ```
 #### OUTPUT ####
-claim: 'Metformin modulates the urea cycle.'
-premise = 8 abstracts concatenated  ->  neutrality 0.97  ->  REFUSED
-premise = best single source ->  neutrality 0.02  ->  SUPPORTED
+  claim: 'Metformin modulates the urea cycle.'
+    premise = 8 abstracts concatenated  ->  neutrality 0.97  ->  REFUSED
+    premise = best single source        ->  neutrality 0.02  ->  SUPPORTED
 
-Same claim, same evidence set , 48x difference - purely from asking the
-verifier a question it was trained to answer.
+  Same claim, same evidence set, 48x difference - purely from asking the
+  verifier a question it was trained to answer.
 ```
 
 **A forty eight fold difference, from asking the verifier a question it was trained to answer.**
@@ -1447,37 +1453,37 @@ Six questions, three of which should be refused.
 
 ```
 #### OUTPUT ####
-question                                             verdict  claims   secs
-----------------------------------------------------------------------------
-Does aspirin reduce the risk of myocardial inf...   ANSWERED       5  138.8
-What is the role of metformin in type 2 diabet...   ANSWERED       8   78.8
-Is hydroxychloroquine effective against COVID-...   ANSWERED       5   24.3
-Does vitamin C cure schizophrenia by quantum e...    REFUSED       0    3.1
-Wingardium leviosa quidditch broomstick aerody...    REFUSED       0    0.0
-Is hydroxychloroquine effective against COVID-...    REFUSED       0    0.0
+  question                                             verdict  claims   secs
+  ----------------------------------------------------------------------------
+  Does aspirin reduce the risk of myocardial inf...   ANSWERED       5  138.8
+  What is the role of metformin in type 2 diabet...   ANSWERED       8   78.8
+  Is hydroxychloroquine effective against COVID-...   ANSWERED       5   24.3
+  Does vitamin C cure schizophrenia by quantum e...    REFUSED       0    3.1
+  Wingardium leviosa quidditch broomstick aerody...    REFUSED       0    0.0
+  Is hydroxychloroquine effective against COVID-...    REFUSED       0    0.0
 
-answered 3/6   refused 3/6
-fabricated citations that reached the user: 0
+  answered 3/6   refused 3/6
+  fabricated citations that reached the user: 0
 ```
 
 Three answered, three refused, zero fabricated citations. Now one in full.
 
 ```
 #### OUTPUT ####
-Q: Does aspirin reduce the risk of myocardial infarction?
+  Q: Does aspirin reduce the risk of myocardial infarction?
 
-ANSWER (cited [26149039, 7438383, 1976875, 15753114]):
-Yes, aspirin reduces the risk of myocardial infarction.
-This is supported by the evidence from multiple studies.
-For instance, the POISE-2 trial showed that perioperative aspirin did not prevent myocardial inf
-Additionally, the Aspirin Myocardial Infarction Study (AMIS) found a nonsignificant trend indica
+  ANSWER (cited [26149039, 7438383, 1976875, 15753114]):
+    Yes, aspirin reduces the risk of myocardial infarction.
+    This is supported by the evidence from multiple studies.
+    For instance, the POISE-2 trial showed that perioperative aspirin did not prevent myocardial inf
+    Additionally, the Aspirin Myocardial Infarction Study (AMIS) found a nonsignificant trend indica
 
-gate 6 - every atomic claim checked against its source :
-OK  neutrality=0.02  Aspirin reduces the risk of myocardial infarction.
-OK  neutrality=0.01  The POISE-2 trial indicated that perioperative aspirin increases
-OK  neutrality=0.01  The Aspirin Myocardial Infarction Study (AMIS) found a nonsignif
-OK  neutrality=0.01  The RISC Group study demonstrated that aspirin reduced the risk
-OK  neutrality=0.04  A randomized trial of low-dose aspirin in the primary prevention
+  gate 6 - every atomic claim checked against its source:
+    OK  neutrality=0.02  Aspirin reduces the risk of myocardial infarction.
+    OK  neutrality=0.01  The POISE-2 trial indicated that perioperative aspirin increases
+    OK  neutrality=0.01  The Aspirin Myocardial Infarction Study (AMIS) found a nonsignif
+    OK  neutrality=0.01  The RISC Group study demonstrated that aspirin reduced the risk 
+    OK  neutrality=0.04  A randomized trial of low-dose aspirin in the primary prevention
 ```
 
 **Five atomic claims, each entailed by its cited abstract, with neutrality between 0.01 and 0.04 against a refusal threshold of 0.90.**
@@ -1486,12 +1492,12 @@ Now the three refusals.
 
 ```
 #### OUTPUT ####
-Does vitamin C cure schizophrenia by quantum entanglement?
-refused at generation / gate 6   reason=grounded  paths=59 usable=25
-Wingardium leviosa quidditch broomstick aerodynamics
-refused before generation   reason=no_mesh_entry_point  paths=0 usable=0
-Is hydroxychloroquine effective against COVID-19?
-refused before generation   reason=no_evidence_as_of_date  paths=300 usable=0
+  Does vitamin C cure schizophrenia by quantum entanglement?  
+      refused at generation / gate 6   reason=grounded  paths=59 usable=25
+  Wingardium leviosa quidditch broomstick aerodynamics        
+      refused before generation   reason=no_mesh_entry_point  paths=0 usable=0
+  Is hydroxychloroquine effective against COVID-19?           
+      refused before generation   reason=no_evidence_as_of_date  paths=300 usable=0
 ```
 
 **Three refusals by three completely different mechanisms.** The invented spell dies at gate one, and the date-limited question finds three hundred paths and keeps zero.
@@ -1512,16 +1518,16 @@ The thesis was economic before epistemic. Here is the ledger.
 
 ```
 #### OUTPUT ####
-stage                                   resource time LLM calls
-------------------------------------------------------------------------------
-acquire 50.5 GiB baseline               network             ~9 min          0
-parse 40M records -> 929M edges         26 CPU cores      10.8 min          0
-MeSH ontology (31k desc, 634k pairs)    1 core               6.4 s          0
-CSR graph build                         1 core + RAM       2.8 min          0
-embed 28.3M abstracts                   1x H100             ~2.1 h          0
-verifier domain adaptation              1x H100              100 s          0
-------------------------------------------------------------------------------
-TOTAL LLM CALLS TO BUILD THE GRAPH                                          0
+  stage                                   resource              time  LLM calls
+  ------------------------------------------------------------------------------
+  acquire 50.5 GiB baseline               network             ~9 min          0
+  parse 40M records -> 929M edges         26 CPU cores      10.8 min          0
+  MeSH ontology (31k desc, 634k pairs)    1 core               6.4 s          0
+  CSR graph build                         1 core + RAM       2.8 min          0
+  embed 28.3M abstracts                   1x H100             ~2.1 h          0
+  verifier domain adaptation              1x H100              100 s          0
+  ------------------------------------------------------------------------------
+  TOTAL LLM CALLS TO BUILD THE GRAPH                                          0
 ```
 
 **Zero model calls to build any of it, in about two and a half hours end to end including acquisition.** The 2.12 hour embedding figure is a projection from the measured 3,718 texts per second, not a stopwatch reading.
@@ -1539,14 +1545,14 @@ Everything so far has been per-component. Now I want the numbers a reviewer asks
 For each real question I built a matched control by swapping one concept for a random unrelated descriptor. It reads like a well-formed medical question, but the evidence does not exist, so **the label follows from the construction, not a judgement call** .
 
 ```
-seed_ok_idx = np.where(np.asarray(S.seed_ok))[ 0 ]
+seed_ok_idx = np.where(np.asarray(S.seed_ok))[0]
 ctrl = []
 for i in pick:
-q = ds[ int (i)][ "question" ]
-br = [(ui, nm) for ui, nm, _ in GR.ground(q) if role_of(S, ui)[ 1 ] == BRIDGE]
-if len (br) >= 2 :
-ui_rand = str (S.mesh_uis[ int (rng.choice(seed_ok_idx))])
-ctrl.append(( int (i), q, [br[ 0 ], (ui_rand, ui_rand)]))
+    q = ds[int(i)]["question"]
+    br = [(ui, nm) for ui, nm, _ in GR.ground(q) if role_of(S, ui)[1] == BRIDGE]
+    if len(br) >= 2:
+        ui_rand = str(S.mesh_uis[int(rng.choice(seed_ok_idx))])
+        ctrl.append((int(i), q, [br[0], (ui_rand, ui_rand)]))
 ```
 
 Press enter or click to view image in full size
@@ -1559,12 +1565,12 @@ A system that pattern-matches on looks medical answers both. A system that check
 
 ```
 #### OUTPUT ####
-real questions answered      40.4%   (n=500)
-control questions answered   16.8%   (n=232)
-discrimination               +23.6 points
+  real questions answered      40.4%   (n=500)
+  control questions answered   16.8%   (n=232)
+  discrimination               +23.6 points
 
-real    median co-annotated articles          0  mean      2,281
-control median co-annotated articles          0  mean          1
+  real    median co-annotated articles          0  mean      2,281
+  control median co-annotated articles          0  mean          1
 ```
 
 **Real questions have a mean co-annotation of 2,281 articles and controls have a mean of one.** The median is zero on both sides because the distribution is so skewed.
@@ -1579,17 +1585,17 @@ Coverage minus leak is the only quantity that improves (Created by Fareed Khan )
 
 ```
 #### OUTPUT ####
-k    coverage   control leak
---------------------------------------
-1       41.0%          30.6%
-2       40.6%          22.8%
-3       40.4%          16.8%  <- shipped
-5       39.2%          12.1%
-8       38.6%           6.9%  <- selected
-12       37.4%           4.7%
-20       36.4%           3.9%
-30       34.0%           2.6%
-50       32.4%           1.7%
+     k    coverage   control leak    
+  --------------------------------------
+     1       41.0%          30.6%
+     2       40.6%          22.8%
+     3       40.4%          16.8%  <- shipped
+     5       39.2%          12.1%
+     8       38.6%           6.9%  <- selected
+    12       37.4%           4.7%
+    20       36.4%           3.9%
+    30       34.0%           2.6%
+    50       32.4%           1.7%
 ```
 
 **At the shipped threshold the system answers one in six questions for which no evidence exists.** Moving to eight costs 1.8 coverage points and removes 59% of the leak, the difference between a system that refuses and one that mostly refuses.
@@ -1606,16 +1612,16 @@ Now the funnel, which names the real limitation.
 
 ```
 #### OUTPUT ####
-cause of loss                            count    share
---------------------------------------------------------
-too_few_specific_concepts                  268    53.6%
-ANSWERED                                   202    40.4%
-no_path                                     26     5.2%
-insufficient_paths                           3     0.6%
-no_quotable_terminal                         1     0.2%
+  cause of loss                            count    share
+  --------------------------------------------------------
+  too_few_specific_concepts                  268    53.6%
+  ANSWERED                                   202    40.4%
+  no_path                                     26     5.2%
+  insufficient_paths                           3     0.6%
+  no_quotable_terminal                         1     0.2%
 
-grounding accounts for 54% of all loss;
-every graph gate combined accounts for 6%.
+  grounding accounts for 54% of all loss;
+  every graph gate combined accounts for 6%.
 ```
 
 **Two hundred and sixty eight of five hundred questions never reach the graph at all, and only twenty six die because the graph has no path.** Every graph gate combined accounts for six percent of the loss, so grounding is the binding constraint and I had been optimising the wrong end.
@@ -1634,16 +1640,16 @@ The industry answer is a learned linker that embeds the concept vocabulary and r
 
 ```
 #### OUTPUT ####
-concept surfaces embedded  203,462 x 384
-descriptors covered        31,110
-index on disk              149 MiB
+  concept surfaces embedded  203,462 x 384
+  descriptors covered        31,110
+  index on disk              149 MiB
 
-What the dense side recovers that the lexical side cannot:
-'should circumcision be performed in childhood' -> Circumcision, Male      0.79
-'sugar diabetes pills' -> Hypoglycemic Agents     0.82
-'water pill for high blood pressure' -> Antihypertensive Agents 0.80
-'PICU length of stay prediction' -> Length of Stay          0.81
-'keyhole surgery complications' -> Intraoperative Compl.   0.80
+  What the dense side recovers that the lexical side cannot:
+    'should circumcision be performed in childhood' -> Circumcision, Male      0.79
+    'sugar diabetes pills'                          -> Hypoglycemic Agents     0.82
+    'water pill for high blood pressure'            -> Antihypertensive Agents 0.80
+    'PICU length of stay prediction'                -> Length of Stay          0.81
+    'keyhole surgery complications'                 -> Intraoperative Compl.   0.80
 ```
 
 **Water pill resolves to Antihypertensive Agents and keyhole surgery to Intraoperative Complications.** No lexical rule reaches those, and 149 MiB is a small price.
@@ -1651,56 +1657,56 @@ What the dense side recovers that the lexical side cannot:
 Now the hybrid grounder. Function words never start or end a span, because fragments like of the heart embed to plausible nonsense.
 
 ```
-class HybridGrounder :
-"""Lexical is certain. Dense is admitted only above a calibrated threshold,
-and never overwrites a lexical hit on the same span."""
+class HybridGrounder:
+    """Lexical is certain. Dense is admitted only above a calibrated threshold,
+    and never overwrites a lexical hit on the same span."""
 
-EDGE_STOP = { "a" , "an" , "the" , "of" , "in" , "on" , "for" , "to" , "with" , "by" ,
-"is" , "are" , "and" , "or" , "that" , "as" , "from" , "can" , "not" }
+    EDGE_STOP = {"a", "an", "the", "of", "in", "on", "for", "to", "with", "by",
+                 "is", "are", "and", "or", "that", "as", "from", "can", "not"}
 
-def _spans ( self, words ):
-out = []
-for n in range ( 1 , min ( self .max_span, len (words)) + 1 ):
-for i in range ( len (words) - n + 1 ):
-sp = words[i:i + n]
-if sp[ 0 ] in EDGE_STOP or sp[- 1 ] in EDGE_STOP:
-continue
-if len ( " " .join(sp)) >= 4 :
-out.append((i, i + n, " " .join(sp)))
-return out
+    def _spans(self, words):
+        out = []
+        for n in range(1, min(self.max_span, len(words)) + 1):
+            for i in range(len(words) - n + 1):
+                sp = words[i:i + n]
+                if sp[0] in EDGE_STOP or sp[-1] in EDGE_STOP:
+                    continue
+                if len(" ".join(sp)) >= 4:
+                    out.append((i, i + n, " ".join(sp)))
+        return out
 ```
 
 Scoring every span against every surface in one batch is where the GPU earns its place, one scatter\_reduce collapsing 203,462 surfaces onto 31,110 descriptors.
 
 ```
 @torch.no_grad()
-def _dense ( self, spans ):
-e = self .tok([s for _, _, s in spans], return_tensors= "pt" , padding= True ,
-truncation= True , max_length= 32 ).to( "cuda" )
-qv = torch.nn.functional.normalize(
-self .enc(**e).last_hidden_state[:, 0 ]. float (), dim=- 1 ).half()
-sims = qv @ self .surf.T
-best = torch.full(( len (spans), self .n_desc), - 1.0 , device= "cuda" ,
-dtype=torch.float16)
-best.scatter_reduce_( 1 , self .owner.expand( len (spans), - 1 ), sims, reduce= "amax" )
-top = torch.topk(best, self .top_per_span, dim= 1 )
-return top.values. float ().cpu().numpy(), top.indices.cpu().numpy()
+def _dense(self, spans):
+    e = self.tok([s for _, _, s in spans], return_tensors="pt", padding=True,
+                 truncation=True, max_length=32).to("cuda")
+    qv = torch.nn.functional.normalize(
+        self.enc(**e).last_hidden_state[:, 0].float(), dim=-1).half()
+    sims = qv @ self.surf.T
+    best = torch.full((len(spans), self.n_desc), -1.0, device="cuda",
+                      dtype=torch.float16)
+    best.scatter_reduce_(1, self.owner.expand(len(spans), -1), sims, reduce="amax")
+    top = torch.topk(best, self.top_per_span, dim=1)
+    return top.values.float().cpu().numpy(), top.indices.cpu().numpy()
 ```
 
 And now the result that nearly killed the whole thing.
 
 ```
 #### OUTPUT ####
-variant               precision   recall   coverage
-----------------------------------------------------
-v5 lexical                0.675    0.172      64.8%
-hybrid tau=0.9            0.585    0.204      83.2%
-hybrid tau=0.86           0.458    0.217      93.9%
-hybrid tau=0.82           0.412    0.216      95.9%
-hybrid tau=0.78           0.400    0.214      97.4%
+  variant               precision   recall   coverage
+  ----------------------------------------------------
+  v5 lexical                0.675    0.172      64.8%
+  hybrid tau=0.9            0.585    0.204      83.2%
+  hybrid tau=0.86           0.458    0.217      93.9%
+  hybrid tau=0.82           0.412    0.216      95.9%
+  hybrid tau=0.78           0.400    0.214      97.4%
 
-No threshold preserves precision. Component-wise, the dense linker looks
-like a mistake - it grounds 'winter' to Snow at 0.90.
+  No threshold preserves precision. Component-wise, the dense linker looks
+  like a mistake - it grounds 'winter' to Snow at 0.90.
 ```
 
 **Precision falls from 0.675 to 0.585 at the tightest threshold and keeps falling.** On the component metric that is disqualifying, and I had just argued that component metrics catch mistakes.
@@ -1719,17 +1725,17 @@ The correct test is therefore system-level, with both halves reported together. 
 
 ```
 #### OUTPUT ####
-grounder                 coverage     leak   margin
-----------------------------------------------------
-lexical (v5)                37.0%    10.5%     26.5
-hybrid tau=0.90             51.0%     9.1%     41.9
-hybrid tau=0.86             59.8%    10.9%     48.8
+  grounder                 coverage     leak   margin
+  ----------------------------------------------------
+  lexical (v5)                37.0%    10.5%     26.5
+  hybrid tau=0.90             51.0%     9.1%     41.9
+  hybrid tau=0.86             59.8%    10.9%     48.8
 
-hybrid tau=0.90: coverage +14.0, leak -1.4
-hybrid tau=0.86: coverage +22.8, leak +0.4
+  hybrid tau=0.90: coverage +14.0, leak -1.4
+  hybrid tau=0.86: coverage +22.8, leak +0.4
 
-tau=0.90 raises coverage +14.0 AND LOWERS leak -1.4: strictly better
-on both axes. Component precision was measuring the wrong thing.
+  tau=0.90 raises coverage +14.0 AND LOWERS leak -1.4: strictly better
+  on both axes. Component precision was measuring the wrong thing.
 ```
 
 **Coverage rises fourteen points and leak falls 1.4 points, which is strictly better on both axes at once.** A grounder that raised both equally would have bought nothing, and the component metric pointed the wrong way.
@@ -1747,48 +1753,48 @@ The lesson is not that component metrics do not matter. It is that **a component
 Up to here the system is a pipeline with a guard, and calling it an agent would overclaim. A genuine agent adds a **feedback edge** that acts on the graph's own structure when evidence is insufficient, so I built one as a state machine with seven nodes and one loop.
 
 ```
-def _build ( self ):
-g = StateGraph(AgentState) # plan, retrieve, grade, refine,
-for n, f in NODES: # generate, verify, adjudicate,
-g.add_node(n, f) # finalize
-g.add_node( "dead" , dead_node)
-g.set_entry_point( "plan" )
-g.add_conditional_edges( "plan" , self ._after_plan,
-{ "retrieve" : "retrieve" , "dead" : "dead" })
-g.add_conditional_edges( "grade" , self ._after_grade,
-{ "generate" : "generate" , "refine" : "refine" ,
-"dead" : "dead" })
-for a, b in [( "retrieve" , "grade" ),
-( "refine" , "retrieve" ), # <- the feedback edge
-( "generate" , "verify" ), ( "verify" , "adjudicate" ),
-( "adjudicate" , "finalize" ), ( "dead" , "finalize" ),
-( "finalize" , END)]:
-g.add_edge(a, b)
-return g. compile ()
+def _build(self):
+    g = StateGraph(AgentState)          # plan, retrieve, grade, refine,
+    for n, f in NODES:                  # generate, verify, adjudicate,
+        g.add_node(n, f)                # finalize
+    g.add_node("dead", dead_node)
+    g.set_entry_point("plan")
+    g.add_conditional_edges("plan", self._after_plan,
+                            {"retrieve": "retrieve", "dead": "dead"})
+    g.add_conditional_edges("grade", self._after_grade,
+                            {"generate": "generate", "refine": "refine",
+                             "dead": "dead"})
+    for a, b in [("retrieve", "grade"),
+                 ("refine", "retrieve"),        # <- the feedback edge
+                 ("generate", "verify"), ("verify", "adjudicate"),
+                 ("adjudicate", "finalize"), ("dead", "finalize"),
+                 ("finalize", END)]:
+        g.add_edge(a, b)
+    return g.compile()
 ```
 
 The refinement node has three strategies, in order of principle.
 
 ```
-def n_refine ( self, st: AgentState ) -> AgentState:
-st[ "hops" ] += 1
-applied = None
-if "broaden" not in st[ "strategy" ]: # 1: broaden up the MeSH tree
-cons = sorted (st[ "concepts" ], # most specific concept first
-key= lambda c: int ( self .S.mesh_count[ self .S.mesh_idx(c[ 0 ])]))
-for ui, nm in cons:
-anc = [a for a in self .tree.parents(ui) if self .S.mesh_idx(a) >= 0 ]
-if not anc:
-continue
-pname = self .GR.name.get(anc[ 0 ], anc[ 0 ])
-st[ "concepts" ] = [(anc[ 0 ], pname) if u == ui else (u, n)
-for u, n in st[ "concepts" ]]
-applied = f"broaden {nm} -> {pname} "
-st[ "strategy" ].append( "broaden" )
-break
-# 2: drop the weakest concept. 3: halve min_paths ONCE.
-st[ "trace" ].append(( "refine" , applied or "no strategy left" ))
-return st
+def n_refine(self, st: AgentState) -> AgentState:
+    st["hops"] += 1
+    applied = None
+    if "broaden" not in st["strategy"]:   # 1: broaden up the MeSH tree
+        cons = sorted(st["concepts"],     # most specific concept first
+                      key=lambda c: int(self.S.mesh_count[self.S.mesh_idx(c[0])]))
+        for ui, nm in cons:
+            anc = [a for a in self.tree.parents(ui) if self.S.mesh_idx(a) >= 0]
+            if not anc:
+                continue
+            pname = self.GR.name.get(anc[0], anc[0])
+            st["concepts"] = [(anc[0], pname) if u == ui else (u, n)
+                              for u, n in st["concepts"]]
+            applied = f"broaden {nm} -> {pname}"
+            st["strategy"].append("broaden")
+            break
+    # 2: drop the weakest concept. 3: halve min_paths ONCE.
+    st["trace"].append(("refine", applied or "no strategy left"))
+    return st
 ```
 
 Broadening is the principled one, walking up curated `BROADER` edges so a rare drug becomes its drug class, and every broadened concept keeps real provenance. Relaxing is unprincipled, so it happens once per question and the trace records it.
@@ -1803,14 +1809,14 @@ The loop, the three strategies, and the one edge that makes it an agent (Created
 
 ```
 #### OUTPUT ####
-arm                              coverage     leak   margin
-------------------------------------------------------------
-A pipeline (one pass)               52.0%     5.0%     47.0
-B agent (conjunctive veto)          48.7%     4.1%     44.5
+  arm                              coverage     leak   margin
+  ------------------------------------------------------------
+  A pipeline (one pass)               52.0%     5.0%     47.0
+  B agent (conjunctive veto)          48.7%     4.1%     44.5
 
-rescued real questions : 2 of 72 refused
-newly leaked controls  : 3
-hops used when answering: {0: 69, 1: 2, 2: 1, 3: 1}
+  rescued real questions : 2 of 72 refused
+  newly leaked controls  : 3
+  hops used when answering: {0: 69, 1: 2, 2: 1, 3: 1}
 ```
 
 **The agent rescued two real questions and newly leaked three controls, and its margin is 2.5 points worse than the pipeline it was supposed to improve.** Of the questions it answered, sixty nine used no refinement at all.
@@ -1826,12 +1832,12 @@ When the pipeline refuses, it is overwhelmingly because grounding yielded fewer 
 The second error was mine. My first two versions folded semantic relevance into a **weighted average at 0.35** , which lets a strong structural score compensate for irrelevant evidence, exactly what a broadened control pair produces.
 
 ```
-def _after_grade ( self, st ):
-"""Conjunctive gating. Semantic relevance is a CONSTRAINT, not a term."""
-struct_ok = st[ "grade" ] >= self .grade_ok and st[ "n_usable" ] >= self .min_paths
-if struct_ok and st.get( "semantic" , 0.0 ) >= self .tau_sem:
-return "generate"
-return "refine" if st[ "hops" ] < self .max_hops else "dead"
+def _after_grade(self, st):
+    """Conjunctive gating. Semantic relevance is a CONSTRAINT, not a term."""
+    struct_ok = st["grade"] >= self.grade_ok and st["n_usable"] >= self.min_paths
+    if struct_ok and st.get("semantic", 0.0) >= self.tau_sem:
+        return "generate"
+    return "refine" if st["hops"] < self.max_hops else "dead"
 ```
 
 **I had built a score where a constraint was needed** , because a gate has to be able to veto. Fixing that cut the leak from 5.0 to 4.1 and cost more coverage than it saved, which is how the agent row ends up worse.
@@ -1842,11 +1848,11 @@ Broadening raises co-annotation for real and random pairs alike, destroying disc
 
 ```
 #### OUTPUT ####
-signal                           real   control    AUROC
-----------------------------------------------------------
-co-annotation (graph)        2841.032     3.892    0.942
-top-1 similarity                0.824     0.669    0.948
-mean top-8 similarity           0.795     0.655    0.939
+  signal                           real   control    AUROC
+  ----------------------------------------------------------
+  co-annotation (graph)        2841.032     3.892    0.942
+  top-1 similarity                0.824     0.669    0.948
+  mean top-8 similarity           0.795     0.655    0.939
 ```
 
 **Top-1 similarity separates real questions from impossible ones at AUROC 0.948** , a signal the graph structurally cannot provide. It went into the agent as the conjunctive veto and still did not rescue the loop, because it was fixing the wrong stage.
@@ -1873,10 +1879,10 @@ Corpus, questions, generator and prompt are fixed, so the only variable is how e
 
 ```
 @torch.no_grad()
-def vector_search ( question, k=TOPK ):
-qv = torch.from_numpy(RK.embed_query(question)).cuda().half()
-top = torch.topk(V @ qv, k)
-return [ int (idx_pmids[i]) for i in top.indices.cpu().numpy()], top.values.tolist()
+def vector_search(question, k=TOPK):
+    qv = torch.from_numpy(RK.embed_query(question)).cuda().half()
+    top = torch.topk(V @ qv, k)
+    return [int(idx_pmids[i]) for i in top.indices.cpu().numpy()], top.values.tolist()
 ```
 
 Beating a weak baseline proves nothing, so Arm A got 20.3 GiB of VRAM and an exhaustive scan.
@@ -1889,17 +1895,17 @@ Selective accuracy, the one number that cannot be gamed by answering only the ea
 
 ```
 #### OUTPUT ####
-arm                             coverage  accuracy  selective
---------------------------------------------------------------
-A vector RAG (exact, 28.3M)       100.0%     48.0%      48.0%
-B graph (no gate)                  67.0%     30.6%      20.5%
-C graph + refusal gate             59.0%     33.9%      20.0%
+  arm                             coverage  accuracy  selective
+  --------------------------------------------------------------
+  A vector RAG (exact, 28.3M)       100.0%     48.0%      48.0%
+  B graph (no gate)                  67.0%     30.6%      20.5%
+  C graph + refusal gate             59.0%     33.9%      20.0%
 
-label distribution      { 'maybe' : 28, 'no' : 70, 'yes' : 102}
-MAJORITY-CLASS BASELINE always answer 'yes' -> 51.0%
-A vector RAG (exact, 28.3M)     48.0%  does NOT beat the constant
-B graph (no gate)               30.6%  does NOT beat the constant
-C graph + refusal gate          33.9%  does NOT beat the constant
+  label distribution      {'maybe': 28, 'no': 70, 'yes': 102}
+  MAJORITY-CLASS BASELINE always answer 'yes' -> 51.0%
+    A vector RAG (exact, 28.3M)     48.0%  does NOT beat the constant
+    B graph (no gate)               30.6%  does NOT beat the constant
+    C graph + refusal gate          33.9%  does NOT beat the constant
 ```
 
 **Selective accuracy is 48.0% for vector retrieval and 20.0% for the gated graph, and neither beats a constant.** Always answering yes scores 51.0%.
@@ -1916,10 +1922,10 @@ The cause of the loss is measurable.
 
 ```
 #### OUTPUT ####
-gold PMID retrieved in top-8
-vector RAG              95.5%
-graph                   15.0%
-graph, when it answers  22.9%
+  gold PMID retrieved in top-8
+    vector RAG              95.5%
+    graph                   15.0%
+    graph, when it answers  22.9%
 ```
 
 **Dense retrieval puts the gold document in the top eight on 95.5% of questions and the graph manages 15.0%.** That is either a bug or a limit, and those need opposite responses, so I decomposed it.
@@ -1935,37 +1941,37 @@ Three causes, each with a different fix. The gold article might carry none of th
 So I checked membership at each stage.
 
 ```
-full = set ( int (x) for x in both)
+full = set(int(x) for x in both)
 if gi not in full:
-stats[ "C1 gold not co-annotated" ] += 1
-continue
+    stats["C1 gold not co-annotated"] += 1
+    continue
 
-trunc = set ( int (x) for x in both[-CL.max_paths:])
+trunc = set(int(x) for x in both[-CL.max_paths:])
 if gi not in trunc:
-stats[ "C3 TRUNCATED AWAY" ] += 1
-continue
+    stats["C3 TRUNCATED AWAY"] += 1
+    continue
 
-order = [S.idx(p.terminal_pmid) for _, p in RK.rank(q, usable, top_k= len (usable))]
+order = [S.idx(p.terminal_pmid) for _, p in RK.rank(q, usable, top_k=len(usable))]
 if gi in order:
-stats[ "HIT top-8" if order.index(gi) < TOPK else "C2 ranked below top-8" ] += 1
+    stats["HIT top-8" if order.index(gi) < TOPK else "C2 ranked below top-8"] += 1
 ```
 
 ```
 #### OUTPUT ####
-where the gold document is lost         count    share
---------------------------------------------------------
-C1 gold not co-annotated                  116    58.0%
-C0 fewer than 2 concepts                   31    15.5%
-HIT top-8                                  25    12.5%
-C3 TRUNCATED AWAY                          23    11.5%
-C2/C3 gold only via bridge                  4     2.0%
-C2 ranked below top-8                       1     0.5%
+  where the gold document is lost         count    share
+  --------------------------------------------------------
+  C1 gold not co-annotated                  116    58.0%
+  C0 fewer than 2 concepts                   31    15.5%
+  HIT top-8                                  25    12.5%
+  C3 TRUNCATED AWAY                          23    11.5%
+  C2/C3 gold only via bridge                  4     2.0%
+  C2 ranked below top-8                       1     0.5%
 
-candidate-set size: median 49   p90 3,257   max 103,835
-max_paths cap was 120 -> 40.8% of questions lost
-candidates before the ranker ever saw them
+  candidate-set size: median 49   p90 3,257   max 103,835
+  max_paths cap was 120 -> 40.8% of questions lost
+  candidates before the ranker ever saw them
 
-when gold IS a candidate: median rank 0, top-8 96%, top-30 100%
+  when gold IS a candidate: median rank 0, top-8 96%, top-30 100%
 ```
 
 Median rank zero, so **the ranker was never the problem** . Gold that reaches the candidate set lands 96% inside the top eight, 100% inside the top thirty.
@@ -1984,14 +1990,14 @@ The arms are cumulative so the interaction is visible.
 
 ```
 #### OUTPUT ####
-arm                                           gold in set gold top-8
-----------------------------------------------------------------------
-A  major_only=True, cap =120  (current)             13.0%       12.5%
-B  major_only=True,  no cap 24.5%       21.5%
-C  major_only=False, cap =120                         9.0%        9.0%
-D  major_only=False, no cap (both fixes)           33.0%       26.5%
+  arm                                           gold in set  gold top-8
+  ----------------------------------------------------------------------
+  A  major_only=True,  cap=120  (current)             13.0%       12.5%
+  B  major_only=True,  no cap                         24.5%       21.5%
+  C  major_only=False, cap=120                         9.0%        9.0%
+  D  major_only=False, no cap  (both fixes)           33.0%       26.5%
 
-vector RAG reference: 95.5%
+  vector RAG reference: 95.5%
 ```
 
 **Minor topics alone made things worse, 12.5% down to 9.0%** , because a larger candidate set means the cap discards more of it. Only with the cap removed do they help, 21.5% to 26.5%.
@@ -2021,52 +2027,52 @@ The three routes, verbatim from the rule the thesis rests on (Created by Fareed 
 ![Image](structuring-docs-knowledge-graph_artifacts/image_000057_ded0f4bba8f2aacfc3c334ba6ed132624d259c509ed78b0785979bd2d6e79bd1.png)
 
 ```
-def certify ( pmid, concept_ds ):
-gi = S.idx(pmid)
-if gi < 0 :
-return False , "not_in_graph"
-ds_ = set ( int (x) for x in S.a2m_indices[S.a2m_indptr[gi]:S.a2m_indptr[gi + 1 ]])
+def certify(pmid, concept_ds):
+    gi = S.idx(pmid)
+    if gi < 0:
+        return False, "not_in_graph"
+    ds_ = set(int(x) for x in S.a2m_indices[S.a2m_indptr[gi]:S.a2m_indptr[gi + 1]])
 
-hit = ds_ & set (concept_ds)
-if len (hit) >= 2 :
-return True , f"co-annotated with { len (hit)} question concepts"
-if len (hit) == 1 :
-for d in set (concept_ds) - hit:
-anc = {S.mesh_idx(a) for a in TREE.ancestors( str (S.mesh_uis[d]), 2 )}
-if ds_ & anc:
-return True , "one concept direct + one via MeSH ancestry"
-# Route 3 repeats this over citation neighbours, capped at 200.
-return False , "only one question concept"
-return False , "no question concept"
+    hit = ds_ & set(concept_ds)
+    if len(hit) >= 2:
+        return True, f"co-annotated with {len(hit)} question concepts"
+    if len(hit) == 1:
+        for d in set(concept_ds) - hit:
+            anc = {S.mesh_idx(a) for a in TREE.ancestors(str(S.mesh_uis[d]), 2)}
+            if ds_ & anc:
+                return True, "one concept direct + one via MeSH ancestry"
+        # Route 3 repeats this over citation neighbours, capped at 200.
+        return False, "only one question concept"
+    return False, "no question concept"
 ```
 
 ```
 #### OUTPUT ####
-certification outcome                              count
-----------------------------------------------------------
-no question concept                                  545
-only one question concept                            519
-co-annotated with 2 question concepts                277
-one concept direct + one via citation adjacency       74
-co-annotated with 3 question concepts                 73
-one concept direct + one via MeSH ancestry            62
-no_concepts                                           40
-co-annotated with 4 question concepts                 10
+  certification outcome                              count
+  ----------------------------------------------------------
+  no question concept                                  545
+  only one question concept                            519
+  co-annotated with 2 question concepts                277
+  one concept direct + one via citation adjacency       74
+  co-annotated with 3 question concepts                 73
+  one concept direct + one via MeSH ancestry            62
+  no_concepts                                           40
+  co-annotated with 4 question concepts                 10
 
-gold retrieved by dense         95.5%
-... and certified by the graph   47.1%
-non-gold certification rate      28.8%
+  gold retrieved by dense         95.5%
+  ... and certified by the graph   47.1%
+  non-gold certification rate      28.8%
 ```
 
 **Gold documents certify at 47.1% and non-gold at 28.8%** , so the signal is real. Certifying fewer than half the correct documents is a weak filter, and the cost shows immediately.
 
 ```
 #### OUTPUT ####
-arm                                         coverage  accuracy  selective
---------------------------------------------------------------------------
-A dense only                                  100.0%     52.0%      52.0%
-E dense + graph certification                  53.5%     49.5%      26.5%
-majority-class constant                       100.0%     51.0%      51.0%
+  arm                                         coverage  accuracy  selective
+  --------------------------------------------------------------------------
+  A dense only                                  100.0%     52.0%      52.0%
+  E dense + graph certification                  53.5%     49.5%      26.5%
+  majority-class constant                       100.0%     51.0%      51.0%
 ```
 
 Coverage falls from 100.0% to 53.5% and selective accuracy halves with it. On the 1100-character harness I had tested graph retrieval three ways and it lost three times.
@@ -2083,12 +2089,12 @@ The oracle arm settles it. No retriever beats handing over the gold passage, so 
 
 ```
 #### OUTPUT ####
-model                           blind   oracle    lift  vs const
-------------------------------------------------------------------
-Qwen2.5-7B-Instruct             22.5%    57.0%  +34.5     +6.0
-Qwen2.5-14B-Instruct            22.0%    73.5%  +51.5    +22.5
+  model                           blind   oracle    lift  vs const
+  ------------------------------------------------------------------
+  Qwen2.5-7B-Instruct             22.5%    57.0%  +34.5     +6.0
+  Qwen2.5-14B-Instruct            22.0%    73.5%  +51.5    +22.5
 
-majority constant: 51.0%
+  majority constant: 51.0%
 ```
 
 **Given the perfect passage the seven-billion model reaches 57.0%, six points above the constant.** Dense retrieval scored 52.0%, about ninety percent of that ceiling, so the whole comparison lived in five points of headroom.
@@ -2105,16 +2111,16 @@ Re-running with headroom produced a number that should have stopped me earlier.
 
 ```
 #### OUTPUT ####
-n = 200   oracle 75.0%   blind 29.0%   majority 51.0%
+  n = 200   oracle 75.0%   blind 29.0%   majority 51.0%
 
-k    dense (bi-encoder)  cross-encoder rerank    graph rerank (H-C)
-------------------------------------------------------------------------
-1                 61.5%                 64.5%                 55.0%
-2                 61.0%                 63.0%                 54.0%
-3                 62.5%                 63.5%                 53.0%
-5                 63.0%                 62.5%                 61.5%
-8                 62.5%                 64.5%                 64.5%
-12                 63.5%                 63.5%                 64.0%
+     k    dense (bi-encoder)  cross-encoder rerank    graph rerank (H-C)
+  ------------------------------------------------------------------------
+     1                 61.5%                 64.5%                 55.0%
+     2                 61.0%                 63.0%                 54.0%
+     3                 62.5%                 63.5%                 53.0%
+     5                 63.0%                 62.5%                 61.5%
+     8                 62.5%                 64.5%                 64.5%
+    12                 63.5%                 63.5%                 64.0%
 ```
 
 The oracle, given the gold document **alone** , scores 75.0%. Dense retrieval puts that same document in the pool 98% of the time and scores 62.5% with it plus seven neighbours.
@@ -2131,22 +2137,22 @@ The label read as probability mass, not parsed out of prose (Created by Fareed K
 
 ```
 @torch.no_grad()
-def decide ( user ):
-msgs = [{ "role" : "system" , "content" : PROMPT}, { "role" : "user" , "content" : user}]
-enc = tok.apply_chat_template(msgs, add_generation_prompt= True ,
-return_tensors= "pt" , return_dict= True ).to( "cuda" )
-p = torch.softmax(gen(**enc).logits[ 0 , - 1 ]. float (), - 1 )
-s = np.array([ float (p[a] + p[b]) for a, b in zip (LAB_IDS, LAB_CAP)])
-return LABELS[ int (s.argmax())], float (s. max () / max (s. sum (), 1e-9 ))
+def decide(user):
+    msgs = [{"role": "system", "content": PROMPT}, {"role": "user", "content": user}]
+    enc = tok.apply_chat_template(msgs, add_generation_prompt=True,
+                                  return_tensors="pt", return_dict=True).to("cuda")
+    p = torch.softmax(gen(**enc).logits[0, -1].float(), -1)
+    s = np.array([float(p[a] + p[b]) for a, b in zip(LAB_IDS, LAB_CAP)])
+    return LABELS[int(s.argmax())], float(s.max() / max(s.sum(), 1e-9))
 ```
 
 Summing the lower-case and capitalised token per label matters, because a model that writes Yes rather than yes is differently formatted, not less certain.
 
 ```
 #### OUTPUT ####
-dense (bi-encoder) in pool  98.0%   rank-1  79.1%   top-3  93.4%   median    0
-cross-encoder rerank in pool  98.0%   rank-1  99.0%   top-3 100.0%   median    0
-graph rerank (H-C) in pool  98.0%   rank-1  63.3%   top-3  77.0%   median    0
+  dense (bi-encoder)     in pool  98.0%   rank-1  79.1%   top-3  93.4%   median    0
+  cross-encoder rerank   in pool  98.0%   rank-1  99.0%   top-3 100.0%   median    0
+  graph rerank (H-C)     in pool  98.0%   rank-1  63.3%   top-3  77.0%   median    0
 ```
 
 **A cross-encoder puts the gold document at rank one 99% of the time.** Ranking is finished, and the remaining gap is about reading rather than retrieval.
@@ -2178,26 +2184,26 @@ A PubMed abstract is structured: background, methods, results, **conclusions** .
 First I measured how much text was being cut.
 
 ```
-top1 = [ int (pool[i][ORDCE[i][ 0 ]]) for i in range (N)]
-L = np.array([ len (ABST.get(p, "" )) for p in top1])
-for t in ( 1100 , 2000 , 3000 , 4000 ):
-print ( f"  truncated at {t:> 5 } { 100 *np.mean(L>t): 5.1 f} % of documents lose text"
-f"   (mean loss {np.maximum(L-t, 0 ).mean(): .0 f} chars)" )
+top1 = [int(pool[i][ORDCE[i][0]]) for i in range(N)]
+L = np.array([len(ABST.get(p, "")) for p in top1])
+for t in (1100, 2000, 3000, 4000):
+    print(f"  truncated at {t:>5}      {100*np.mean(L>t):5.1f}% of documents lose text"
+          f"   (mean loss {np.maximum(L-t,0).mean():.0f} chars)")
 ```
 
 ```
 #### OUTPUT ####
-Length of the document the system actually reads (cross-encoder rank 1),
-measured over all 1000 expert-labelled questions:
+  Length of the document the system actually reads (cross-encoder rank 1),
+  measured over all 1000 expert-labelled questions:
 
-mean 1718 chars    median 1720    p90 2187    max 3224
+     mean 1718 chars    median 1720    p90 2187    max 3224
 
-truncation   documents losing text   mean chars lost
-------------------------------------------------------
-1100                   94.2%               628  <-- every experiment before this section
-2000                   18.9%                54
-3000                    0.4%                 1
-4000                    0.0%                 0
+    truncation   documents losing text   mean chars lost
+  ------------------------------------------------------
+          1100                   94.2%               628  <-- every experiment before this section
+          2000                   18.9%                54
+          3000                    0.4%                 1
+          4000                    0.0%                 0
 ```
 
 **At 1100 characters, 94.2% of documents lose text, and the median abstract loses its final 620 characters.** That is the sentence saying whether the finding was positive, negative or mixed.
@@ -2206,13 +2212,13 @@ Now the sweep. One constant, four values, everything else fixed: same thousand q
 
 ```
 #### OUTPUT ####
-configuration       accuracy   delta vs 1100
-----------------------------------------------
-k=1, trunc 1100        67.9%           +0.0
-k=1, trunc 2000        81.6%          +13.7
-k=1, trunc 3000        82.4%          +14.5
-k=1, trunc 4000        82.4%          +14.5
-k=8, trunc 3000        80.3%          +12.4
+  configuration       accuracy   delta vs 1100
+  ----------------------------------------------
+  k=1, trunc 1100        67.9%           +0.0
+  k=1, trunc 2000        81.6%          +13.7
+  k=1, trunc 3000        82.4%          +14.5
+  k=1, trunc 4000        82.4%          +14.5
+  k=8, trunc 3000        80.3%          +12.4
 ```
 
 **Raising one constant from 1100 to 3000 moved accuracy by 14.5 points.** The flat run from 3000 to 4000 is the control, because 99.6% of abstracts are complete by then, so the effect is truncation.
@@ -2245,22 +2251,22 @@ Two details make this pass about five times faster across forty six thousand for
 
 ```
 @torch.no_grad()
-def posteriors ( users, sys_prompt, bs ):
-"""Batched constrained decoding: full normalised P over {yes,no,maybe}."""
-txt = [tok.apply_chat_template(
-[{ "role" : "system" , "content" : sys_prompt}, { "role" : "user" , "content" : u}],
-add_generation_prompt= True , tokenize= False ) for u in users]
-order = np.argsort([ len (t) for t in txt], kind= "stable" )
-out = np.zeros(( len (users), 3 ), dtype=np.float32)
-for s in range ( 0 , len (order), bs):
-sel = order[s:s + bs]
-e = tok([txt[i] for i in sel], return_tensors= "pt" , padding= True ,
-truncation= True , max_length= 8000 ,
-add_special_tokens= False ).to( "cuda" )
-p = torch.softmax(gen(**e, logits_to_keep= 1 ).logits[:, - 1 ]. float (), - 1 )
-sc = torch.stack([p[:, a] + p[:, b] for a, b in zip (LAB_IDS, LAB_CAP)], 1 )
-out[sel] = (sc / sc. sum ( 1 , keepdim= True ).clamp_min( 1e-9 )).cpu().numpy()
-return out
+def posteriors(users, sys_prompt, bs):
+    """Batched constrained decoding: full normalised P over {yes,no,maybe}."""
+    txt = [tok.apply_chat_template(
+        [{"role": "system", "content": sys_prompt}, {"role": "user", "content": u}],
+        add_generation_prompt=True, tokenize=False) for u in users]
+    order = np.argsort([len(t) for t in txt], kind="stable")
+    out = np.zeros((len(users), 3), dtype=np.float32)
+    for s in range(0, len(order), bs):
+        sel = order[s:s + bs]
+        e = tok([txt[i] for i in sel], return_tensors="pt", padding=True,
+                truncation=True, max_length=8000,
+                add_special_tokens=False).to("cuda")
+        p = torch.softmax(gen(**e, logits_to_keep=1).logits[:, -1].float(), -1)
+        sc = torch.stack([p[:, a] + p[:, b] for a, b in zip(LAB_IDS, LAB_CAP)], 1)
+        out[sel] = (sc / sc.sum(1, keepdim=True).clamp_min(1e-9)).cpu().numpy()
+    return out
 ```
 
 Press enter or click to view image in full size
@@ -2278,23 +2284,23 @@ Four hundred to choose, six hundred to report, and they never meet (Created by F
 ![Image](structuring-docs-knowledge-graph_artifacts/image_000067_750b1efeaeaf4830dd23a0ec2ef68f4be49fab7057348f8e400af10349d41033.png)
 
 ```
-rng = np.random.default_rng( 0 )
+rng = np.random.default_rng(0)
 perm = rng.permutation(N)
-DEV, TEST = np.sort(perm[: 400 ]), np.sort(perm[ 400 :])
+DEV, TEST = np.sort(perm[:400]), np.sort(perm[400:])
 
 # The oracle and blind arms are REFERENCE POINTS, not deployable systems. Left
 # in the pool once, this sweep picked oracle+calibration at 77.2%, a number
 # that cannot be produced at inference time.
-SELECTABLE = np.array([i for i, n in enumerate (NAMES)
-if "oracle" not in n and "blind" not in n])
+SELECTABLE = np.array([i for i, n in enumerate(NAMES)
+                       if "oracle" not in n and "blind" not in n])
 ```
 
 The class bias is fitted by grid search, and my first grid was too narrow.
 
 ```
-def fit_bias ( p, idx, grid=np.arange( - 3.0 , 3.01 , 0.05 ) ):
-# An earlier run used [-1, 2] and the optimum landed exactly on the -1.00
-# edge for both classes, so the reported bias was an artefact of the grid.
+def fit_bias(p, idx, grid=np.arange(-3.0, 3.01, 0.05)):
+    # An earlier run used [-1, 2] and the optimum landed exactly on the -1.00
+    # edge for both classes, so the reported bias was an artefact of the grid.
 ```
 
 Press enter or click to view image in full size
@@ -2317,17 +2323,17 @@ The decision rule, one additive bias vector fitted on development data only (Cre
 
 ```
 #### OUTPUT ####
-system                                          TEST          95% CI
---------------------------------------------------------------------
-blind (no evidence at all)                     37.2%
-majority class (constant 'yes' )                53.3%
-PREVIOUS BEST, trunc 1100                      68.8%    [65.0, 72.5]
-corrected, argmax                              82.3%    [79.3, 85.3]
-corrected + DEV-fitted calibration             83.2%    [80.2, 86.2]
+  system                                          TEST          95% CI
+  --------------------------------------------------------------------
+  blind (no evidence at all)                     37.2%                
+  majority class (constant 'yes')                53.3%                
+  PREVIOUS BEST, trunc 1100                      68.8%    [65.0, 72.5]
+  corrected, argmax                              82.3%    [79.3, 85.3]
+  corrected + DEV-fitted calibration             83.2%    [80.2, 86.2]
 
-Winner selected on DEV: p0|concat|ce_k1
-configurations searched: 139   DEV 400   TEST 600
-DEV->TEST correlation across all configs: 0.990
+  Winner selected on DEV: p0|concat|ce_k1
+  configurations searched: 139   DEV 400   TEST 600
+  DEV->TEST correlation across all configs: 0.990
 ```
 
 **83.2% on six hundred held-out questions, with a 95% interval of 80.2 to 86.2, against a 53.3% majority floor and a 37.2% no-evidence floor.**
@@ -2356,10 +2362,10 @@ Two checks belong beside that number. The first is what picking a winner is wort
 
 ```
 #### OUTPUT ####
-Labels shuffled, so no configuration can carry real signal.
-best of 137          47.5%
-median               44.0%
-spread max - median   3.5 points
+  Labels shuffled, so no configuration can carry real signal.
+  best of 137          47.5%
+  median               44.0%
+  spread max - median   3.5 points
 ```
 
 **With the labels shuffled, the best of 137 configurations still clears the median by 3.5 points.** That is why the development and test split is not optional.
@@ -2404,23 +2410,23 @@ A measurement error makes results **wrong in a direction** , and the direction f
 
 ```
 #### OUTPUT ####
-(a) THE DISTRACTION GAP
-previously reported     12.7% of error was distraction
-corrected                2.0%
--> 10.7 of those 12.7 points were the oracle arm
-reading 4000 characters while the deployed arm read 1100.
+  (a) THE DISTRACTION GAP
+      previously reported     12.7% of error was distraction
+      corrected                2.0%
+      -> 10.7 of those 12.7 points were the oracle arm
+         reading 4000 characters while the deployed arm read 1100.
 
-(b) 'maybe' IS UNDETECTABLE
-at trunc 1100   AUROC for detecting gold= 'maybe' 0.548  (chance)
-corrected                                          0.755
--> The hedging language that signals an inconclusive study lives in
-the CONCLUSIONS sentence. We were deleting the evidence for the
-class and then concluding the model could not represent it.
+  (b) 'maybe' IS UNDETECTABLE
+      at trunc 1100   AUROC for detecting gold='maybe'   0.548  (chance)
+      corrected                                          0.755
+      -> The hedging language that signals an inconclusive study lives in
+         the CONCLUSIONS sentence. We were deleting the evidence for the
+         class and then concluding the model could not represent it.
 
-(c) THE BIGGER MODEL IS WORSE
-14B       32B
-at trunc 1100              67.9%     55.1%
-corrected                  82.4%     82.4%
+  (c) THE BIGGER MODEL IS WORSE
+                                   14B       32B
+      at trunc 1100              67.9%     55.1%
+      corrected                  82.4%     82.4%
 ```
 
 Eighty four percent of the distraction gap was my harness. **It was the oracle reading complete abstracts while the deployed arm read truncated ones.**
@@ -2457,18 +2463,18 @@ Every error assigned to exactly one cause (Created by Fareed Khan )
 
 ```
 #### OUTPUT ####
-bucket                               n    share   what would fix it
-----------------------------------------------------------------------------
-answered correctly                 494    82.3%   -
-gold never retrieved                 8     1.3%   better retrieval
-distraction                         12     2.0%   better ranking / reading
-both renderings wrong               86    14.3%   reading or label limit
+  bucket                               n    share   what would fix it
+  ----------------------------------------------------------------------------
+  answered correctly                 494    82.3%   -
+  gold never retrieved                 8     1.3%   better retrieval
+  distraction                         12     2.0%   better ranking / reading
+  both renderings wrong               86    14.3%   reading or label limit
 
-gold        n   correct  retrieval  distract  residual
---------------------------------------------------------
-yes 320     90.0%       1.2%      2.5%      6.2%
-no        218     94.5%       0.9%      1.8%      2.8%
-maybe      62      0.0%       3.2%      0.0%     96.8%
+  gold        n   correct  retrieval  distract  residual
+  --------------------------------------------------------
+  yes       320     90.0%       1.2%      2.5%      6.2%
+  no        218     94.5%       0.9%      1.8%      2.8%
+  maybe      62      0.0%       3.2%      0.0%     96.8%
 ```
 
 **Retrieval is effectively solved at 1.3%.** A 929-million-edge graph and a dense index over 28.3 million abstracts put the right document in a sixteen-candidate pool 97.4% of the time, and distraction, my central problem, is 2.0%.
@@ -2515,17 +2521,17 @@ The claim this project was built on is that graph certification does not buy acc
 
 ```
 #### OUTPUT ####
-Matched on coverage - both policies answer the same NUMBER of questions,
-so only the CHOICE of which ones differs.
+  Matched on coverage - both policies answer the same NUMBER of questions,
+  so only the CHOICE of which ones differs.
 
-coverage   graph certification   model confidence     edge
---------------------------------------------------------------
-90%                 82.3%              87.6%    -5.3
-80%                 82.4%              90.4%    -8.0
-70%                 82.4%              93.3%   -10.9
-60%                 82.4%              93.6%   -11.2
-50%                 82.4%              94.0%   -11.6
-40%                 83.8%              95.0%   -11.2
+    coverage   graph certification   model confidence     edge
+  --------------------------------------------------------------
+         90%                 82.3%              87.6%    -5.3
+         80%                 82.4%              90.4%    -8.0
+         70%                 82.4%              93.3%   -10.9
+         60%                 82.4%              93.6%   -11.2
+         50%                 82.4%              94.0%   -11.6
+         40%                 83.8%              95.0%   -11.2
 ```
 
 **Graph certification is flat at 82.4%.** Refusing half the questions leaves accuracy at the unfiltered rate, while confidence climbs from 82.3% to 94.0%.
@@ -2534,26 +2540,26 @@ That used concept overlap, the crudest of three routes. Here is the full rule.
 
 ```
 #### OUTPUT ####
-Which route earned the certification?
+  Which route earned the certification?
 
-no_question_concept           438  ( 43.8%)
-route1_coannotated            411  ( 41.1%)
-route2_mesh_ancestry           84  (  8.4%)  <- graph-specific
-route3_citation_adjacency      67  (  6.7%)  <- graph-specific
+    no_question_concept           438  ( 43.8%)
+    route1_coannotated            411  ( 41.1%)
+    route2_mesh_ancestry           84  (  8.4%)  <- graph-specific
+    route3_citation_adjacency      67  (  6.7%)  <- graph-specific
 
-The two graph-specific routes account for 15.1% of decisions.
-certified within top-8   56.2% of questions
+  The two graph-specific routes account for 15.1% of decisions.
+  certified within top-8   56.2% of questions
 
-signal                                    AUROC
--------------------------------------------------
-path certification, rank-1 doc            0.500
-path certification, best of top-8         0.497
-concept overlap only                      0.519
-model confidence  max P(y)  [FREE]        0.810  <- free
+  signal                                    AUROC
+  -------------------------------------------------
+  path certification, rank-1 doc            0.500
+  path certification, best of top-8         0.497
+  concept overlap only                      0.519
+  model confidence  max P(y)  [FREE]        0.810  <- free
 
-accuracy on CERTIFIED questions    82.2%
-accuracy on REFUSED   questions    82.5%
-difference                         -0.4 points
+  accuracy on CERTIFIED questions    82.2%
+  accuracy on REFUSED   questions    82.5%
+  difference                         -0.4 points
 ```
 
 **Path certification predicts correctness at AUROC 0.500, chance to three decimal places.** Certified questions are correct 82.2% of the time and refused questions 82.5%, so it declines questions it would have got right, at random. The two graph-specific routes fired on 15.1% of decisions and moved it from 0.519 to 0.497.
@@ -2572,11 +2578,11 @@ Selective accuracy counts value per question **asked** .
 
 ```
 #### OUTPUT ####
-Selective accuracy (accuracy x coverage) - value per question ASKED:
-answer everything                  100.0%    82.3%     82.3%
-path certification, top-8           54.2%    82.2%     44.5%
-path certification, rank-1          43.3%    82.3%     35.7%
-confidence, matched coverage        54.2%    93.8%     50.8%
+  Selective accuracy (accuracy x coverage) - value per question ASKED:
+    answer everything                  100.0%    82.3%     82.3%
+    path certification, top-8           54.2%    82.2%     44.5%
+    path certification, rank-1          43.3%    82.3%     35.7%
+    confidence, matched coverage        54.2%    93.8%     50.8%
 ```
 
 **Answering everything scores 82.3% and beats certification outright** , because refusing at random halves the value.
@@ -2603,7 +2609,7 @@ It does not buy the refusal decision.
 The expensive part is done. The posterior cache took about fifty seven GPU-minutes, and everything downstream is arithmetic over it.
 
 ```
-python -m venv .venv && .venv/bin/activate # Windows: .venv\Scripts\activate
+python -m venv .venv && .venv/bin/activate      # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 python analysis/run_all.py
 ```
@@ -2615,18 +2621,18 @@ The requirements are numpy and matplotlib.
 ==========================================================================
 ALL ANALYSES COMPLETE
 ==========================================================================
-configurations built         139  (137 selectable; oracle + blind excluded)
-split DEV 400 / TEST 600
-winner                       p0|concat|ce_k1
-no-evidence floor            37.2%
-majority-class floor         53.3%
-graph certification AUROC    0.500  (chance)
-free confidence AUROC        0.810
+  configurations built         139  (137 selectable; oracle + blind excluded)
+  split                        DEV 400 / TEST 600
+  winner                       p0|concat|ce_k1
+  no-evidence floor            37.2%
+  majority-class floor         53.3%
+  graph certification AUROC    0.500  (chance)
+  free confidence AUROC        0.810
 
-TEST accuracy (argmax)       82.3%
-TEST accuracy                83.2%
+  TEST accuracy (argmax)       82.3%
+  TEST accuracy                83.2%
 
-reproduces the published 83.2%: YES
+  reproduces the published 83.2%: YES
 ```
 
 The run reproduces the published 83.2%, and **every value matched exactly** . The files are not byte-identical, because JSON key ordering differs, but every number is the same.
@@ -2645,32 +2651,32 @@ Collected in one place, because they share a signature.
 
 ```
 #### OUTPUT ####
-1. major-topic arrays misaligned
-cause   : two dedup rules, two sort orders, in two separate passes
-symptom : evidence labelled with the wrong article 's flags
-fix     : rebuild in one pass + alignment assert + DB spot-check
+  1. major-topic arrays misaligned
+       cause   : two dedup rules, two sort orders, in two separate passes
+       symptom : evidence labelled with the wrong article's flags
+       fix     : rebuild in one pass + alignment assert + DB spot-check
 
-2. gate 6 scored a concatenation
-cause   : verifier trained on claim-vs-ONE-abstract, fed 8 concatenated
-symptom : 0.97 neutrality on true claims -> refused good answers, looked cautious
-fix     : score against the best single source (0.97 -> 0.02 on an identical claim)
+  2. gate 6 scored a concatenation
+       cause   : verifier trained on claim-vs-ONE-abstract, fed 8 concatenated
+       symptom : 0.97 neutrality on true claims -> refused good answers, looked cautious
+       fix     : score against the best single source (0.97 -> 0.02 on an identical claim)
 
-3. ranker cache keyed to first question
-cause   : cache populated by question 1' s pmid set , reused for all
-symptom : every later question scored -1.0 and fell back to arbitrary order
-fix     : one pmid-sorted memmap index + searchsorted
+  3. ranker cache keyed to first question
+       cause   : cache populated by question 1's pmid set, reused for all
+       symptom : every later question scored -1.0 and fell back to arbitrary order
+       fix     : one pmid-sorted memmap index + searchsorted
 
-4. citation regex missed multi-PMID
-cause   : the pattern matched one id per bracket, not a list
-symptom : '0 fabricated citations' was vacuous - nothing was being checked
-fix     : match the bracket, split , rewrite keeping only valid ids
+  4. citation regex missed multi-PMID
+       cause   : the pattern matched one id per bracket, not a list
+       symptom : '0 fabricated citations' was vacuous - nothing was being checked
+       fix     : match the bracket, split, rewrite keeping only valid ids
 
-5. head-noun grounding
-cause   : coverage +8 points looked like a clear win
-symptom : precision 0.610 -> 0.535, +103 false positives
-fix     : measure precision against NLM headings; reject the feature
+  5. head-noun grounding
+       cause   : coverage +8 points looked like a clear win
+       symptom : precision 0.610 -> 0.535, +103 false positives
+       fix     : measure precision against NLM headings; reject the feature
 
-All five degraded silently. Four of the five made a metric IMPROVE.
+  All five degraded silently. Four of the five made a metric IMPROVE.
 ```
 
 **All five degraded silently, and four of the five made a metric improve.** Add the truncation constant and that is six, all with the same shape.
@@ -2762,7 +2768,7 @@ Follow
 
 [Careers](https://medium.com/jobs-at-medium/work-at-medium-959d1a85284e?source=post_page-----92010e609dfa------------------------------------------)
 
-[Press](/data/input/mailto:pressinquiries@medium.com)
+[Press](/data/prepared/mailto:pressinquiries@medium.com)
 
 [Blog](https://blog.medium.com/?source=post_page-----92010e609dfa------------------------------------------)
 

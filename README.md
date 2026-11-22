@@ -17,6 +17,10 @@ the run is offline (`HF_HUB_OFFLINE=1`).
    After converting, it rewrites table-of-contents links whose text matches a
    heading to `#Heading-Slug` (case kept, punctuation dropped, spaces → `-`),
    replacing the site URLs that saved web pages use.
+   Before converting, HTML files are copied to `.prepared/` with every `<pre>`
+   reduced to plain text (`scripts/flatten_pre.py`). Without this docling
+   loses code indentation and blank lines in syntax-highlighted blocks, so
+   plain `docker compose run --rm docling` gives worse code for HTML.
 3. Read `output/<name>.md`. Images are in `output/<name>_artifacts/` as PNG
    and linked from the `.md` by relative path.
 

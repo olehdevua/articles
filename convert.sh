@@ -16,6 +16,23 @@ done
 
 (( ${#todo[@]} )) || { echo "nothing to convert"; exit 0; }
 printf 'converting: %s\n' "${todo[@]#/data/input/}"
+
+# HTML goes through scripts/flatten_pre.py first (keeps code indentation; see
+# the script). docling reads the copy in .prepared/, which has the same name,
+# so the .md name does not change.
+html=()
+for i in "${!todo[@]}"; do
+  [[ "${todo[$i]}" == *.html ]] || continue
+  html+=("${todo[$i]}")
+  todo[$i]="/data/prepared/$(basename "${todo[$i]}")"
+done
+mkdir -p .prepared
+rm -f .prepared/*.html
+if (( ${#html[@]} )); then
+  docker compose run --rm -T --entrypoint python docling \
+    -I /data/scripts/flatten_pre.py /data/prepared "${html[@]}"
+fi
+
 docker compose run --rm -T docling "${todo[@]}"
 
 # Point table-of-contents links at in-document headings.

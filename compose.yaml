@@ -8,6 +8,9 @@ services:
     volumes:
       - ./input:/data/input:ro
       - ./output:/data/output
+      # HTML copies with flattened <pre> blocks, written by convert.sh.
+      - ./.prepared:/data/prepared
+      - ./scripts:/data/scripts:ro
     # Relative --output makes docling write relative image links in the .md
     # (an absolute one gives /data/output/... links that break on the host).
     working_dir: /data/output

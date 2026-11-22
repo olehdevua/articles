@@ -1,3 +1,4 @@
 input/*
 !.gitkeep
 .idea
+.prepared/
